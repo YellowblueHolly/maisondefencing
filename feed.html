@@ -566,36 +566,39 @@ function renderCard(item) {
   const isOwner = currentUser && item.authorId === currentUser.id;
   const badgeClass = { reddit:'badge-reddit', user:'badge-user', youtube:'badge-youtube' }[item.source] || 'badge-user';
   const badgeLabel = { reddit:'Reddit', user:'회원 업로드', youtube:'YouTube' }[item.source] || '업로드';
+  const isVideo = item.type === 'video' || item.type === 'youtube' || item.type === 'instagram';
 
+  // 항상 썸네일 이미지 사용 (비디오 태그 사용 안 함)
   let thumbHtml = '';
-  if (item.type === 'video' && item.fileUrl) {
-    thumbHtml = `<video src="${esc(item.fileUrl)}" muted playsinline style="width:100%;max-height:220px;object-fit:cover;display:block"></video>`;
-  } else if (item.thumbnail) {
-    thumbHtml = `<img src="${esc(item.thumbnail)}" alt="${esc(item.title)}" loading="lazy" style="width:100%;display:block;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\\"padding:40px 0;text-align:center;font-size:40px\\">🤺</div>'">`;
+  if (item.thumbnail) {
+    thumbHtml = `<img src="${esc(item.thumbnail)}" alt="${esc(item.title)}" loading="lazy" style="width:100%;display:block;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;align-items:center;justify-content:center;min-height:120px;font-size:40px">🤺</div>`;
   } else {
-    thumbHtml = `<div style="padding:40px 0;text-align:center;font-size:40px">🤺</div>`;
+    thumbHtml = `<div style="display:flex;align-items:center;justify-content:center;min-height:120px;font-size:40px">🤺</div>`;
   }
 
-  const isVideo = item.type === 'video' || item.type === 'youtube';
-  const playOverlay = isVideo ? `<div class="play-overlay"><div class="play-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="${'var(--ink)'}"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>` : '';
+  const playOverlay = isVideo ? `
+    <div class="play-overlay">
+      <div class="play-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--ink)"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+    </div>` : '';
 
-  const target = item.url === '#' ? '' : 'target="_blank" rel="noopener"';
-  const href = item.url || '#';
+  const target = item.url && item.url !== '#' ? 'target="_blank" rel="noopener"' : '';
 
   const userActions = isUserItem ? `
-    <button class="like-btn ${item.liked ? 'liked' : ''}" onclick="event.preventDefault();toggleMemeLike('${item.dbId}',this)">
+    <button class="like-btn ${item.liked ? 'liked' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleMemeLike('${item.dbId}',this)">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="${item.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       ${formatCount(item.likes)}
     </button>
-    ${isOwner ? `<button class="del-btn" onclick="event.preventDefault();deleteMeme('${item.dbId}')">삭제</button>` : ''}
+    ${isOwner ? `<button class="del-btn" onclick="event.preventDefault();event.stopPropagation();deleteMeme('${item.dbId}')">삭제</button>` : ''}
   ` : `<span>${formatCount(item.likes)}</span>`;
 
   return `
     <div class="card" id="card-user-${item.dbId || ''}">
-      <a href="${esc(href)}" ${target} class="card-link">
-        <div class="thumb">
+      <a href="${esc(item.url || '#')}" ${target} class="card-link">
+        <div class="thumb" style="position:relative;overflow:hidden">
           ${thumbHtml}
-          <span class="source-badge ${badgeClass}">${badgeLabel}</span>
+          <span class="source-badge ${badgeClass}" style="position:absolute;top:8px;left:8px;z-index:2">${badgeLabel}</span>
           ${playOverlay}
         </div>
         <div class="card-body">
