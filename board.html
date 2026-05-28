@@ -168,7 +168,7 @@
     <div class="nav-links">
       <a href="index.html">홈</a>
       <a href="rules.html">규정 검색</a>
-      <a href="talk.html">펜싱톡</a>
+      
       <a href="board.html" class="active">게시판</a>
       <a href="sites.html">사이트 모음</a>
       <a href="clubs.html">클럽 찾기</a>
@@ -445,31 +445,70 @@ async function submitAuth() {
   const password = document.getElementById('input-password').value;
   const username = document.getElementById('input-username').value.trim();
   const errEl    = document.getElementById('auth-error');
+  const btn      = document.getElementById('modal-submit-btn');
 
   if (!email || !password) { showErr('이메일과 비밀번호를 입력해주세요'); return; }
 
+  // 버튼 로딩 상태
+  btn.disabled = true;
+  btn.textContent = isLoginMode ? '로그인 중...' : '가입 처리 중...';
+  errEl.classList.remove('show');
+
   if (isLoginMode) {
     const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) { showErr('이메일 또는 비밀번호가 올바르지 않아요'); return; }
+    if (error) {
+      showErr('이메일 또는 비밀번호가 올바르지 않아요');
+      btn.disabled = false; btn.textContent = '로그인';
+      return;
+    }
     closeAuth();
-    showToast('로그인 됐어요!');
+    showToast('✅ 로그인 됐어요!');
     loadPosts();
   } else {
-    if (!username) { showErr('닉네임을 입력해주세요'); return; }
-    if (username.length < 2) { showErr('닉네임은 2자 이상이어야 해요'); return; }
-    const { error } = await sb.auth.signUp({
+    if (!username) { showErr('닉네임을 입력해주세요'); btn.disabled = false; btn.textContent = '가입하기'; return; }
+    if (username.length < 2) { showErr('닉네임은 2자 이상이어야 해요'); btn.disabled = false; btn.textContent = '가입하기'; return; }
+    const { data, error } = await sb.auth.signUp({
       email, password,
       options: { data: { username } }
     });
-    if (error) { showErr(error.message); return; }
-    closeAuth();
-    showToast('가입 완료! 이메일 인증 후 로그인해주세요 📧');
+    if (error) {
+      showErr(error.message === 'User already registered' ? '이미 가입된 이메일이에요' : error.message);
+      btn.disabled = false; btn.textContent = '가입하기';
+      return;
+    }
+
+    // 성공 화면 — 모달 내부를 성공 UI로 교체
+    const modal = document.querySelector('#auth-modal .modal');
+    const isAutoLogin = data?.session != null; // 이메일 인증 OFF면 바로 로그인
+    modal.innerHTML = `
+      <div style="padding:40px 32px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">${isAutoLogin ? '🎉' : '📧'}</div>
+        <h2 style="font-family:var(--font-display);font-size:22px;font-weight:500;letter-spacing:1px;margin-bottom:10px">
+          ${isAutoLogin ? '가입 완료!' : '가입 신청 완료!'}
+        </h2>
+        <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px">
+          ${isAutoLogin
+            ? `<strong style="color:var(--ink)">${escHtml(username)}</strong> 님, 환영해요 🤺<br>지금 바로 이용하실 수 있어요.`
+            : `<strong style="color:var(--ink)">${escHtml(email)}</strong>로<br>인증 메일을 보냈어요.<br>메일 확인 후 로그인해주세요.`
+          }
+        </p>
+        <button onclick="closeAuth()" style="width:100%;padding:11px;background:var(--ink);color:var(--cream);border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font-body)">
+          ${isAutoLogin ? '시작하기' : '확인'}
+        </button>
+      </div>`;
+    if (isAutoLogin) {
+      setTimeout(() => { closeAuth(); loadPosts(); }, 1800);
+    }
   }
 
   function showErr(msg) {
     errEl.textContent = msg;
     errEl.classList.add('show');
   }
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 /* ─── 게시글 목록 ─── */
