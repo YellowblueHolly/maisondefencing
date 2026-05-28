@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>펜싱을 좋아하는 사람들의 모임 — Maison de Fencing</title>
+<title>메종드펜싱 — Maison de Fencing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -538,12 +538,12 @@
     </div>
     <div class="hero-stats">
       <div class="stat">
-        <div class="stat-n" id="stat-rules">291</div>
+        <div class="stat-n" id="stat-rules">431</div>
         <div class="stat-l">규정 조문</div>
       </div>
       <div class="stat-div"></div>
       <div class="stat">
-        <div class="stat-n" id="stat-clubs">48</div>
+        <div class="stat-n" id="stat-clubs">94</div>
         <div class="stat-l">등록 클럽</div>
       </div>
       <div class="stat-div"></div>
@@ -847,7 +847,34 @@ document.getElementById('main-search').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.value.trim()) goSearch(e.target.value.trim());
 });
 
+/* ── Stats 동적 업데이트 ── */
+async function loadStats() {
+  try {
+    // 클럽 수 — clubs_db.json
+    const res = await fetch('clubs_db.json');
+    const clubs = await res.json();
+    document.getElementById('stat-clubs').textContent = clubs.length;
+  } catch(e) {}
+
+  try {
+    // 게시글 수 — Supabase
+    const { count } = await sb.from('posts').select('*', { count: 'exact', head: true });
+    if (count !== null) {
+      document.getElementById('stat-posts').textContent = count >= 1000 ? (count/1000).toFixed(1)+'k' : count;
+    }
+  } catch(e) {}
+
+  try {
+    // 회원 수 — Supabase profiles
+    const { count } = await sb.from('profiles').select('*', { count: 'exact', head: true });
+    if (count !== null) {
+      document.getElementById('stat-members').textContent = count >= 1000 ? (count/1000).toFixed(1)+'k' : count;
+    }
+  } catch(e) {}
+}
+
 /* ── Init ── */
+loadStats();
 loadMemes();
 loadPosts();
 loadClubs();
