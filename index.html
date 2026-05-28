@@ -824,8 +824,49 @@ function loadSites() {
 function goSearch(q) {
   location.href = 'rules.html?q=' + encodeURIComponent(q);
 }
-document.getElementById('main-search').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.value.trim()) goSearch(e.target.value.trim());
+
+// 메인 검색 — 타이핑 시 용어집 힌트 표시
+let glossaryData = [];
+fetch('glossary.json').then(r=>r.json()).then(d=>{ glossaryData=d; }).catch(()=>{});
+
+const mainSearchInput = document.getElementById('main-search');
+let hintBox = null;
+
+mainSearchInput.addEventListener('input', e => {
+  const q = e.target.value.trim();
+  if (q.length < 1) { if(hintBox) hintBox.style.display='none'; return; }
+  const hits = glossaryData.filter(t =>
+    t.original?.toLowerCase().includes(q.toLowerCase()) ||
+    t.pron?.includes(q) ||
+    t.colloquial?.includes(q) ||
+    t.meaning?.includes(q)
+  ).slice(0, 3);
+  if (!hits.length) { if(hintBox) hintBox.style.display='none'; return; }
+  if (!hintBox) {
+    hintBox = document.createElement('div');
+    hintBox.style.cssText = 'position:absolute;z-index:100;background:var(--paper);border:1px solid var(--border-strong);border-radius:8px;padding:6px 0;box-shadow:0 4px 16px rgba(0,0,0,0.1);width:100%;top:calc(100% + 4px);left:0';
+    mainSearchInput.parentElement.style.position = 'relative';
+    mainSearchInput.parentElement.appendChild(hintBox);
+  }
+  hintBox.innerHTML = hits.map(t => `
+    <div onclick="goSearch('${t.original}')" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px" onmouseover="this.style.background='var(--faint)'" onmouseout="this.style.background=''">
+      <span style="font-family:var(--font-display);font-size:15px;font-weight:600">${t.original}</span>
+      ${t.pron ? `<span style="font-size:12px;color:var(--teal);background:var(--teal-bg);padding:1px 7px;border-radius:3px">${t.pron}</span>` : ''}
+      ${t.meaning ? `<span style="font-size:12px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.meaning.slice(0,40)}</span>` : ''}
+    </div>`).join('');
+  hintBox.style.display = '';
+});
+
+mainSearchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    if(hintBox) hintBox.style.display='none';
+    goSearch(e.target.value.trim());
+  }
+  if (e.key === 'Escape' && hintBox) hintBox.style.display='none';
+});
+
+document.addEventListener('click', e => {
+  if (hintBox && !mainSearchInput.parentElement.contains(e.target)) hintBox.style.display='none';
 });
 
 /* ── Stats 동적 업데이트 ── */

@@ -1,0 +1,666 @@
+[
+  {
+    "id": "s1-4",
+    "original": "Arrêt",
+    "english": "",
+    "pron": "아레",
+    "colloquial": "",
+    "meaning": "단순 역공격(꽁뜨르 오팡시브), 꽁뜨르 아따끄 라고도 함"
+  },
+  {
+    "id": "s1-5",
+    "original": "Attaque",
+    "english": "",
+    "pron": "아따끄",
+    "colloquial": "아딱",
+    "meaning": "공격, 팔을 펴면서 팡트나 플레쉬 등 실행하는 최초의 공격"
+  },
+  {
+    "id": "s1-6",
+    "original": "Attaque Composée",
+    "english": "",
+    "pron": "아따끄 꽁뽀제",
+    "colloquial": "",
+    "meaning": "하나 또는 여러 개의 페인트가 선행되고 이뤄지는 공격"
+  },
+  {
+    "id": "s1-7",
+    "original": "Attaque Simple",
+    "english": "",
+    "pron": "아따끄 생쁠",
+    "colloquial": "",
+    "meaning": "단순공격, 팡트나 플레쉬로 한순간에 실행하는 공격\n아따끄는 직접(꾸 드르와), 또는 간접(꾸뼤, 데가즈망)적으로 행해짐"
+  },
+  {
+    "id": "s1-8",
+    "original": "Balestra",
+    "english": "",
+    "pron": "발레스트라",
+    "colloquial": "",
+    "meaning": "앞으로 점프(봉 아방)하고 팡트 연결"
+  },
+  {
+    "id": "s1-9",
+    "original": "Battement",
+    "english": "",
+    "pron": "바뜨망",
+    "colloquial": "빠떼/바떼",
+    "meaning": "상대 칼을 치는 동작"
+  },
+  {
+    "id": "s1-10",
+    "original": "Bond en avant",
+    "english": "",
+    "pron": "봉 덩 나방",
+    "colloquial": "봉나방",
+    "meaning": "앞으로 점프"
+  },
+  {
+    "id": "s1-11",
+    "original": "Bond en arrière",
+    "english": "",
+    "pron": "봉 덩 나리에르",
+    "colloquial": "봉나리",
+    "meaning": "뒤로 점프"
+  },
+  {
+    "id": "s1-12",
+    "original": "Combat rapproché",
+    "english": "",
+    "pron": "꽁바 라프로쉐",
+    "colloquial": "",
+    "meaning": "신체의 직접적 접촉없이 두 선수가 아주 가까운 거리에 있는 상황"
+  },
+  {
+    "id": "s1-13",
+    "original": "Contre",
+    "english": "",
+    "pron": "꽁뜨르",
+    "colloquial": "",
+    "meaning": "상대의 공격이 끝나는 부분과 반대되는 곳으로 상대 칼을 이끌기 위하여 칼 뽀엥뜨가 원형의 움직임을 그리면서 실행되는 빠라드"
+  },
+  {
+    "id": "s1-14",
+    "original": "Contre-attaque",
+    "english": "Counter attack",
+    "pron": "꽁뜨르 아따끄",
+    "colloquial": "",
+    "meaning": "상대의 아따끄에 대하여 행하는 단순 또는 복합 역공격"
+  },
+  {
+    "id": "s1-15",
+    "original": "Contre offensive",
+    "english": "",
+    "pron": "꽁뜨르 오팡시브",
+    "colloquial": "",
+    "meaning": "상대의 오팡시브(공격)에 대하여 행하는 모든 동작들의 총칭"
+  },
+  {
+    "id": "s1-16",
+    "original": "Contre-riposte",
+    "english": "",
+    "pron": "꽁뜨르 리뽀스트",
+    "colloquial": "",
+    "meaning": "대의 리뽀스트를 막은 후에 행하는 리뽀스트"
+  },
+  {
+    "id": "s1-17",
+    "original": "Contre-temps",
+    "english": "",
+    "pron": "꽁뜨르 땅",
+    "colloquial": "",
+    "meaning": "상대의 꽁뜨르 아따끄를 막은 후에 행하는 공격 기술"
+  },
+  {
+    "id": "s1-18",
+    "original": "Coquille",
+    "english": "",
+    "pron": "꼬끼유",
+    "colloquial": "",
+    "meaning": "손을 보호하기 위하여 앞으로 볼록하게 튀어나온 원형의 금속 부분"
+  },
+  {
+    "id": "s1-19",
+    "original": "Corps à Corps",
+    "english": "",
+    "pron": "꼬르 아 꼬르",
+    "colloquial": "",
+    "meaning": "두 선수가 신체적으로 접촉을 일으킨 상황"
+  },
+  {
+    "id": "s1-20",
+    "original": "Coup droit",
+    "english": "",
+    "pron": "꾸드르와",
+    "colloquial": "",
+    "meaning": "아따끄 생쁠 중의 하나. 바로 찌르기"
+  },
+  {
+    "id": "s1-21",
+    "original": "Coupé",
+    "english": "",
+    "pron": "꾸뻬",
+    "colloquial": "",
+    "meaning": "아따끄 생쁠 중의 하나. 높은 린느에서 높은 린느로의 꾸뻬는 상대 칼 뽀엥뜨 위를 지나가며, 낮은 린느서 낮은 린느로의 꾸뻬는 상대 칼 뽀엥뜨 밑을 지나간다."
+  },
+  {
+    "id": "s1-22",
+    "original": "Croisé",
+    "english": "",
+    "pron": "크르와제",
+    "colloquial": "",
+    "meaning": "프리즈 드 페르의 하나"
+  },
+  {
+    "id": "s1-23",
+    "original": "Dedans",
+    "english": "",
+    "pron": "드당",
+    "colloquial": "",
+    "meaning": "프리즈 드 페르의 하나.(드당) 선수의 왼쪽 높은 린느 (동의어:꺄르뜨 린느)"
+  },
+  {
+    "id": "s1-24",
+    "original": "Defensive",
+    "english": "",
+    "pron": "데팡시브",
+    "colloquial": "",
+    "meaning": "상대의 공격을 제어하는 모든 동작들의 총칭. 빠라드, 에스뀌브, 데쁠라스망 등이 있음"
+  },
+  {
+    "id": "s1-25",
+    "original": "Dégagement",
+    "english": "",
+    "pron": "데가즈망",
+    "colloquial": "데가제",
+    "meaning": "아따끄 생쁠 중의 하나. 이미 위치해 있던 공간을 떠나 다른 린느에서 뚜슈를 행하려 하는 동작"
+  },
+  {
+    "id": "s1-26",
+    "original": "Dehors",
+    "english": "",
+    "pron": "드오르",
+    "colloquial": "",
+    "meaning": "선수의 오른쪽 낮은 린느"
+  },
+  {
+    "id": "s1-27",
+    "original": "Dérobement",
+    "english": "",
+    "pron": "데로브망",
+    "colloquial": "",
+    "meaning": "상대가 아따끄 오 페르나 프리즈 드 페르로 칼을 잡으려 할 때 그것을 피하는 오팡시브(공격) 또는 꽁뜨르 오팡시브(역공격)"
+  },
+  {
+    "id": "s1-28",
+    "original": "Dessous",
+    "english": "",
+    "pron": "드쑤",
+    "colloquial": "",
+    "meaning": "선수의 왼쪽 낮은 린느"
+  },
+  {
+    "id": "s1-29",
+    "original": "Dessus",
+    "english": "",
+    "pron": "드쒸",
+    "colloquial": "",
+    "meaning": "수의 오른쪽 높은 린느(동의어 : 식스린느)"
+  },
+  {
+    "id": "s1-30",
+    "original": "Distance",
+    "english": "",
+    "pron": "디스땅스",
+    "colloquial": "",
+    "meaning": "두 선수 사이의 간격. 일반적으로 리뽀스트 거리(단지 팔을 펼 수 있는 간격), 아따끄 거리 등과 같이 구분"
+  },
+  {
+    "id": "s1-31",
+    "original": "Coup double",
+    "english": "",
+    "pron": "꾸 두블",
+    "colloquial": "",
+    "meaning": "동시 득점"
+  },
+  {
+    "id": "s1-32",
+    "original": "Engagement",
+    "english": "",
+    "pron": "앙가즈망",
+    "colloquial": "",
+    "meaning": "두 칼이 접촉하고 있는 상황. 앙가즈망을 취한다는 것은 상대칼에 자신의 칼을 갖다 대는 것을 말함"
+  },
+  {
+    "id": "s1-33",
+    "original": "Esquive",
+    "english": "",
+    "pron": "에스뀌브",
+    "colloquial": "",
+    "meaning": "몸의 빠른 이동을 통해 상대의 꾸를 피하는 방법"
+  },
+  {
+    "id": "s1-34",
+    "original": "Feinte",
+    "english": "",
+    "pron": "펭뜨",
+    "colloquial": "액션",
+    "meaning": "상대 반응을 이용하기 위한 페인트"
+  },
+  {
+    "id": "s1-35",
+    "original": "Fente",
+    "english": "Lunge",
+    "pron": "팡트",
+    "colloquial": "팡트/빵트",
+    "meaning": "다리 뻗으며 길게 공격"
+  },
+  {
+    "id": "s1-36",
+    "original": "Fer",
+    "english": "",
+    "pron": "페르",
+    "colloquial": "",
+    "meaning": "칼몸(람므)"
+  },
+  {
+    "id": "s1-37",
+    "original": "Attaque au Fer",
+    "english": "",
+    "pron": "아따끄 오 페르",
+    "colloquial": "",
+    "meaning": "fer 는 칼 날을 뜻한다. 이 손 동작 기술은 일차적으로 fer (페르)에 공격을 가한 후 상대의 타겟에 공격하는 것"
+  },
+  {
+    "id": "s1-38",
+    "original": "Prise de fer",
+    "english": "",
+    "pron": "프리즈 드 페르",
+    "colloquial": "",
+    "meaning": "상대칼을 잡으면서 행하는 동작. 오뽀지숑, 크르와제, 리망, 엉벨로쁘망이 있음"
+  },
+  {
+    "id": "s1-39",
+    "original": "Flèche",
+    "english": "",
+    "pron": "플레쉬",
+    "colloquial": "후레쉬",
+    "meaning": "팔을 펴면서 몸을 앞으로 날리면서 찌르는 공격"
+  },
+  {
+    "id": "s1-40",
+    "original": "Garde",
+    "english": "",
+    "pron": "갸르드",
+    "colloquial": "꺄르드",
+    "meaning": "공격이나 수비를 동시에 준비하기 위해 선수가 취할 수 있는 가장 유리한 자세"
+  },
+  {
+    "id": "s1-41",
+    "original": "Lame",
+    "english": "",
+    "pron": "람므",
+    "colloquial": "",
+    "meaning": "기능상 세부분과 스와로 나뉘어져 있다.\n상위 1/3 (플러레에서는 테이프로 절연되어있다.),\n중간 1/3 : 상대 칼에 대한 동작(앙가즈망, 바뜨망 등) 실행 시 사용\n하위 1/3 : 빠라드나 프리즈 드 페르 실행 시 사용"
+  },
+  {
+    "id": "s1-42",
+    "original": "Liement",
+    "english": "",
+    "pron": "리망",
+    "colloquial": "",
+    "meaning": "프리즈 드 페르의 하나. 상대 칼을 높은 린느에서 잡아 대각선의 낮은 린느로 이끈다(또는 반대로)."
+  },
+  {
+    "id": "s1-43",
+    "original": "Ligne",
+    "english": "",
+    "pron": "린느",
+    "colloquial": "",
+    "meaning": "(플, 에) 선수 칼을 기준으로 나뉘는 과녁의 각 부분들\n4개가 있다. - 높은 린느 (드쒸, 드당), 낮은 린느(드쑤, 드오르)"
+  },
+  {
+    "id": "s1-44",
+    "original": "Marche",
+    "english": "Advance",
+    "pron": "마르쉬",
+    "colloquial": "마르셰",
+    "meaning": "전진"
+  },
+  {
+    "id": "s1-45",
+    "original": "Octave",
+    "english": "",
+    "pron": "옥타브",
+    "colloquial": "",
+    "meaning": "(플, 에) 드오르 린느를 막고 있는 자세"
+  },
+  {
+    "id": "s1-46",
+    "original": "Offensive",
+    "english": "",
+    "pron": "오팡시브",
+    "colloquial": "",
+    "meaning": "상대를 찌르고자 하는 모든 동작들의 총칭"
+  },
+  {
+    "id": "s1-47",
+    "original": "Opposition",
+    "english": "",
+    "pron": "오뽀지숑",
+    "colloquial": "",
+    "meaning": "프리즈 드 페르의 하나.\n상대의 칼을 잡아 공격(오팡시브)이 끝날 때까지 같은 린느에서 칼을 잡은 상태로 이끈다."
+  },
+  {
+    "id": "s1-48",
+    "original": "Parade",
+    "english": "Parry",
+    "pron": "빠라드",
+    "colloquial": "",
+    "meaning": "수비"
+  },
+  {
+    "id": "s1-49",
+    "original": "Mal Paré",
+    "english": "",
+    "pron": "말 빠레",
+    "colloquial": "",
+    "meaning": "(사브르) 정확히 막히지 않은 빠라드. 상대의 공격은 유효"
+  },
+  {
+    "id": "s1-50",
+    "original": "Passe avant",
+    "english": "",
+    "pron": "빠스아방",
+    "colloquial": "",
+    "meaning": "뒷발을 앞발 앞에 갖다 놓으면서 상대에게 접근하는 움직임"
+  },
+  {
+    "id": "s1-51",
+    "original": "Passe arrière",
+    "english": "",
+    "pron": "빠스아리에르",
+    "colloquial": "",
+    "meaning": "앞발을 뒷발 뒤에 갖다 놓으면서 상대로부터 멀어지는 움직임"
+  },
+  {
+    "id": "s1-52",
+    "original": "Piste",
+    "english": "",
+    "pron": "삐스트",
+    "colloquial": "피스트",
+    "meaning": "펜싱 경기가 진행되는 지면 or 바닥"
+  },
+  {
+    "id": "s1-53",
+    "original": "Positions",
+    "english": "",
+    "pron": "뽀지시옹",
+    "colloquial": "",
+    "meaning": "(플, 에) 4개 린느에서 선수의 손이 취할 수 있는 위치. 뽀지시옹은 8개가 있다.\n쉬피나숑 자세(꺄르뜨, 식스뜨, 셉팀, 옥타브)\n프로나숑 자세(프림, 스꽁드, 띠에르쓰, 껭뜨)\n(사)뽀지시옹은 5개가 있다 : 띠에르쓰, 꺄르뜨, 껭뜨, 스꽁드, 프림"
+  },
+  {
+    "id": "s1-54",
+    "original": "Quarte",
+    "english": "",
+    "pron": "꺄르트",
+    "colloquial": "",
+    "meaning": "(플, 에) 드당 린느를 막는 자세.\n(사) 왼쪽 측면을 막는 자세."
+  },
+  {
+    "id": "s1-55",
+    "original": "Quinte",
+    "english": "",
+    "pron": "껭뜨",
+    "colloquial": "",
+    "meaning": "(사) 얼굴과 어깨를 막는 자세. 손은 오른쪽, 손바닥은 앞을 향하고 칼날은 위를 향한다."
+  },
+  {
+    "id": "s1-56",
+    "original": "Remise",
+    "english": "Remise",
+    "pron": "르미즈",
+    "colloquial": "리미지/르미지",
+    "meaning": "공격 후 재차 공격"
+  },
+  {
+    "id": "s1-57",
+    "original": "Reprise",
+    "english": "",
+    "pron": "르프리즈",
+    "colloquial": "",
+    "meaning": "두 번째 공격 동작. 단순이나 복합, 또는 상대 칼에 대한 동작 후에 실행할 수 있다. 일반적으로 리뽀스트를 하지 않는 상대에게 사용됨"
+  },
+  {
+    "id": "s1-58",
+    "original": "Retraite",
+    "english": "",
+    "pron": "르뜨레트",
+    "colloquial": "",
+    "meaning": "상대로부터 멀어지기 위한 뒤로의 이동"
+  },
+  {
+    "id": "s1-59",
+    "original": "Riposte",
+    "english": "",
+    "pron": "리뽀스트",
+    "colloquial": "리포스트",
+    "meaning": "상대방 공격 제지 후 역공격"
+  },
+  {
+    "id": "s1-60",
+    "original": "Rompre",
+    "english": "",
+    "pron": "롱쁘르",
+    "colloquial": "롱뻬",
+    "meaning": "후진"
+  },
+  {
+    "id": "s1-61",
+    "original": "Salut",
+    "english": "Salute",
+    "pron": "살뤼",
+    "colloquial": "살루트/살룻",
+    "meaning": "인사"
+  },
+  {
+    "id": "s1-62",
+    "original": "Septime",
+    "english": "",
+    "pron": "셒팀",
+    "colloquial": "",
+    "meaning": "(플, 에) 드쑤 린느를 막는 자세"
+  },
+  {
+    "id": "s1-63",
+    "original": "Actions simultanées",
+    "english": "",
+    "pron": "악시옹 시뮬따네",
+    "colloquial": "",
+    "meaning": "두 선수가 동시에 공격한 상황"
+  },
+  {
+    "id": "s1-64",
+    "original": "Sixte",
+    "english": "",
+    "pron": "식스뜨",
+    "colloquial": "식스",
+    "meaning": "드쒸 린느를 막는 자세. 식스 자세는 전통적인 갸르드 자세로 취급"
+  },
+  {
+    "id": "s1-65",
+    "original": "Surface valable",
+    "english": "",
+    "pron": "쉬르파스 발라블",
+    "colloquial": "",
+    "meaning": "유효면"
+  },
+  {
+    "id": "s1-66",
+    "original": "Temps d'escrime",
+    "english": "",
+    "pron": "땅 데스크림",
+    "colloquial": "",
+    "meaning": "땅(Temps)은 단순 공격(오팡시브)의 실행시간이다. 땅은 플러레와 사브르에서 필수적인 관습 중의 하나"
+  },
+  {
+    "id": "s1-67",
+    "original": "Tête",
+    "english": "",
+    "pron": "떼뜨",
+    "colloquial": "",
+    "meaning": "(사)마스크의 윗부분을 구성하는 과녁"
+  },
+  {
+    "id": "s1-68",
+    "original": "Tierrce",
+    "english": "",
+    "pron": "띠에르쓰",
+    "colloquial": "",
+    "meaning": "(플, 에) 드쒸 린느를 막는 자세"
+  },
+  {
+    "id": "s1-69",
+    "original": "Toucher",
+    "english": "Touch",
+    "pron": "뚜셰/투셰",
+    "colloquial": "뚜쉬/뚜슈",
+    "meaning": "유효득점\n뚜슈 발라블 : 과녁에 닿은 꾸\n뚜슈 농 발라블 : 상대에 닿았으나 과녁외의 무효면에 닿은 꾸"
+  },
+  {
+    "id": "s1-70",
+    "original": "Une-deux",
+    "english": "",
+    "pron": "윤-두",
+    "colloquial": "",
+    "meaning": "데가즈망에 의한 펭뜨(페인트)후에 상대의 빠라드 디렉뜨를 피하는(트롱프망) 복합 공격(오팡시브) 동작을 가리키는 단축 용어"
+  },
+  {
+    "id": "s1-71",
+    "original": "Une-deux-trois",
+    "english": "",
+    "pron": "윤-두-트롸",
+    "colloquial": "",
+    "meaning": "데가즈망에 의한 펭뜨 후에 두 번의 상대 빠라드 디렉뜨를 피하는 복합 공격동작을 가리키는 단축 용어. 윤-두, 윤-두-트롸에 의한 아따끄, 윤-두, 윤-두-트롸에 의한 리뽀스트."
+  },
+  {
+    "id": "s1-72",
+    "original": "Variétès d'actions offensive",
+    "english": "",
+    "pron": "바리에떼 닥시옹 오팡시브",
+    "colloquial": "",
+    "meaning": "르미즈, 르프리즈, 꽁뜨르 땅이 있음"
+  },
+  {
+    "id": "s1-76",
+    "original": "En garde",
+    "english": "On guard",
+    "pron": "앙 갸르드",
+    "colloquial": "엉 가드/앙 게아",
+    "meaning": "펜싱 기본(준비) 자세"
+  },
+  {
+    "id": "s1-77",
+    "original": "Es-tu prêt",
+    "english": "Are you ready?",
+    "pron": "에쥬 프레",
+    "colloquial": "",
+    "meaning": "준비됐나요?"
+  },
+  {
+    "id": "s1-78",
+    "original": "Prêt",
+    "english": "Ready?",
+    "pron": "프레",
+    "colloquial": "",
+    "meaning": "준비"
+  },
+  {
+    "id": "s1-79",
+    "original": "Allez",
+    "english": "Go ahead",
+    "pron": "알레",
+    "colloquial": "",
+    "meaning": "경기 시작"
+  },
+  {
+    "id": "s1-80",
+    "original": "Halte",
+    "english": "Halt",
+    "pron": "알트",
+    "colloquial": "",
+    "meaning": "경기 멈춤 (정지)"
+  },
+  {
+    "id": "s1-81",
+    "original": "Attention",
+    "english": "",
+    "pron": "어텐션",
+    "colloquial": "",
+    "meaning": "차렷"
+  },
+  {
+    "id": "s1-82",
+    "original": "Salut",
+    "english": "Salute",
+    "pron": "살룻",
+    "colloquial": "살루트/살루",
+    "meaning": "인사"
+  },
+  {
+    "id": "s1-83",
+    "original": "Retraite",
+    "english": "Retreat",
+    "pron": "르뜨레",
+    "colloquial": "흐트레",
+    "meaning": "후진"
+  },
+  {
+    "id": "s1-84",
+    "original": "Touché",
+    "english": "Touch",
+    "pron": "",
+    "colloquial": "",
+    "meaning": "유효득점"
+  },
+  {
+    "id": "s1-85",
+    "original": "Non-valable",
+    "english": "Invalid",
+    "pron": "농발라블",
+    "colloquial": "",
+    "meaning": "무효"
+  },
+  {
+    "id": "s1-86",
+    "original": "Remise",
+    "english": "Remise",
+    "pron": "르미지",
+    "colloquial": "리미지",
+    "meaning": "공격 후 재차 공격"
+  },
+  {
+    "id": "s1-87",
+    "original": "Parade riposte",
+    "english": "",
+    "pron": "빠라드 리포스트",
+    "colloquial": "",
+    "meaning": "수비 후 반격"
+  },
+  {
+    "id": "s1-88",
+    "original": "Pointe en ligne",
+    "english": "",
+    "pron": "뽀엥뜨 앙 린느",
+    "colloquial": "",
+    "meaning": "팔을 뻗어 상대를 겨누고 있는 상태"
+  },
+  {
+    "id": "s2-8",
+    "original": "Attaque au fer",
+    "english": "",
+    "pron": "아따끄 오 페르",
+    "colloquial": "",
+    "meaning": ""
+  }
+]

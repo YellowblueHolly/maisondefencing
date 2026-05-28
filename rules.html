@@ -85,6 +85,19 @@
   }
   .tag-daepan { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
   .tag-guide  { background: var(--teal-bg); color: var(--teal); border: 1px solid var(--teal-border); }
+
+  /* 용어집 카드 */
+  .glossary-inline-section { margin-bottom: 16px; }
+  .glossary-section-label { display:flex; align-items:center; justify-content:space-between; font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.5px; margin-bottom:8px; }
+  .glossary-section-divider { font-size:12px; color:var(--muted); border-top:1px solid var(--border); padding-top:12px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .glossary-section-divider span { font-weight:600; color:var(--ink); }
+  .glossary-card { background:var(--paper); border:1px solid rgba(26,107,90,0.2); border-left:3px solid var(--teal); border-radius:8px; padding:12px 14px; margin-bottom:8px; }
+  .gterm-header { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+  .gterm-original { font-family:var(--font-display); font-size:17px; font-weight:600; color:var(--ink); letter-spacing:.5px; }
+  .gterm-pron { font-size:13px; font-weight:600; color:var(--teal); background:var(--teal-bg); padding:2px 8px; border-radius:4px; }
+  .gterm-coll { font-size:11px; color:var(--muted); background:var(--faint); padding:2px 7px; border-radius:4px; }
+  .gterm-eng { font-size:11px; color:var(--muted); }
+  .gterm-meaning { font-size:13px; color:var(--ink); line-height:1.6; }
   .result-title { font-size: 14px; font-weight: 500; line-height: 1.4; flex: 1; }
   .result-title mark { background: #FFF3CD; color: var(--ink); border-radius: 2px; padding: 0 2px; }
   .result-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; font-size: 11px; color: var(--muted); }
@@ -183,6 +196,7 @@
       <button class="chip active" id="chip-all" onclick="setFilter('all')">전체</button>
       <button class="chip" id="chip-daepan" onclick="setFilter('대한펜싱협회')">대한펜싱협회 규칙서</button>
       <button class="chip guide" id="chip-guide" onclick="setFilter('훈련지도서')">체육지도자 훈련지도서</button>
+      <button class="chip" id="chip-glossary" onclick="setFilter('glossary')" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25);color:rgba(245,242,236,0.7)">📖 용어집</button>
     </div>
   </div>
 </section>
@@ -308,37 +322,41 @@
 
 <script>
 let DB = [];
+let GLOSSARY = [];
 let fuse = null;
+let fuseGlossary = null;
 let currentFilter = 'all';
 let currentSort = 'relevance';
 let currentQuery = '';
 let currentPage = 1;
 const PAGE_SIZE = 15;
 
-// URL 파라미터에서 검색어 가져오기
 const urlParams = new URLSearchParams(window.location.search);
 const initQuery = urlParams.get('q') || '';
 
 async function loadDB() {
   try {
-    const res = await fetch('rules_db.json');
-    DB = await res.json();
+    const [rulesRes, glossaryRes] = await Promise.all([
+      fetch('rules_db.json'),
+      fetch('glossary.json')
+    ]);
+    DB = await rulesRes.json();
+    GLOSSARY = await glossaryRes.json();
+
     fuse = new Fuse(DB, {
-      keys: [
-        { name: 'text',    weight: 0.6 },
-        { name: 'title',   weight: 0.3 },
-        { name: 'chapter', weight: 0.1 },
-      ],
-      threshold: 0.4,
-      includeScore: true,
-      includeMatches: true,
-      minMatchCharLength: 2,
+      keys: [{ name:'text', weight:0.6 }, { name:'title', weight:0.3 }, { name:'chapter', weight:0.1 }],
+      threshold: 0.4, includeScore: true, includeMatches: true, minMatchCharLength: 2,
     });
+    fuseGlossary = new Fuse(GLOSSARY, {
+      keys: [{ name:'original', weight:0.4 }, { name:'pron', weight:0.3 }, { name:'colloquial', weight:0.2 }, { name:'meaning', weight:0.3 }],
+      threshold: 0.4, includeScore: true, minMatchCharLength: 1,
+    });
+
     const total = DB.length;
     const rules = DB.filter(d => d.source === '대한펜싱협회').length;
     const guide = DB.filter(d => d.source === '훈련지도서').length;
     document.getElementById('stats-count').innerHTML =
-      `총 <strong>${total}</strong>개 항목 — 경기규칙서 ${rules}p · 훈련지도서 ${guide}p`;
+      `총 <strong>${total}</strong>개 항목 · 규정 ${rules}p · 훈련 ${guide}p · 용어 <strong>${GLOSSARY.length}</strong>개`;
 
     if (initQuery) {
       document.getElementById('search-input').value = initQuery;
@@ -348,7 +366,7 @@ async function loadDB() {
     }
   } catch(e) {
     document.getElementById('results-container').innerHTML =
-      '<div class="empty"><p>데이터 로딩 실패. rules_db.json 파일을 확인해주세요.</p></div>';
+      '<div class="empty"><p>데이터 로딩 실패. 파일을 확인해주세요.</p></div>';
   }
 }
 
@@ -370,7 +388,7 @@ function escRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function renderResults(items, query) {
+function renderResults(items, query, glossaryHits) {
   const container = document.getElementById('results-container');
   const paginator = document.getElementById('pagination');
 
@@ -419,6 +437,32 @@ function renderResults(items, query) {
         </div>
       </div>`;
   }).join('');
+
+  // 용어집 인라인 표시 (전체 검색 시, 첫 페이지에서만)
+  if (glossaryHits && glossaryHits.length && currentPage === 1) {
+    const gHtml = glossaryHits.map(r => {
+      const g = r.item || r;
+      return `
+        <div class="glossary-card">
+          <div class="gterm-header">
+            <span class="gterm-original">${highlight(g.original, query)}</span>
+            ${g.pron ? `<span class="gterm-pron">${escHtml(g.pron)}</span>` : ''}
+            ${g.colloquial ? `<span class="gterm-coll">구어: ${escHtml(g.colloquial)}</span>` : ''}
+          </div>
+          ${g.meaning ? `<p class="gterm-meaning">${highlight(g.meaning, query)}</p>` : ''}
+        </div>`;
+    }).join('');
+    container.innerHTML = `
+      <div class="glossary-inline-section">
+        <div class="glossary-section-label">
+          <span>📖 용어집 연관 결과</span>
+          <button onclick="setFilter('glossary')" style="font-size:11px;padding:3px 10px;border:1px solid var(--border-strong);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer">전체 보기</button>
+        </div>
+        ${gHtml}
+      </div>
+      <div class="glossary-section-divider">규정 검색 결과 <span>${total}건</span></div>
+    ` + container.innerHTML;
+  }
 
   // Pagination
   if (totalPages <= 1) {
@@ -479,31 +523,42 @@ function applySort(results, isSearch) {
 function doSearch(q) {
   currentQuery = q;
   currentPage = 1;
-  let results;
-  if (!q || q.trim().length < 1) {
-    showDefault();
+  if (!q || q.trim().length < 1) { showDefault(); return; }
+
+  if (currentFilter === 'glossary') {
+    const gResults = fuseGlossary ? fuseGlossary.search(q.trim()) : [];
+    renderGlossaryResults(gResults, q);
     return;
   }
-  results = fuse.search(q.trim());
-  // 우선순위: 대한펜싱협회 결과를 앞으로 (같은 score 레벨에서)
+
+  let results = fuse.search(q.trim());
   if (currentSort === 'relevance') {
-    results.sort((a, b) => {
-      const scoreDiff = (a.score || 0) - (b.score || 0);
-      if (Math.abs(scoreDiff) > 0.05) return scoreDiff;
-      return (a.item.priority || 2) - (b.item.priority || 2);
+    results.sort((a,b) => {
+      const d = (a.score||0) - (b.score||0);
+      if (Math.abs(d) > 0.05) return d;
+      return (a.item.priority||2) - (b.item.priority||2);
     });
   }
   results = applyFilter(results);
   results = applySort(results, true);
-  renderResults(results, q);
+
+  // 전체 필터일 때 용어 결과도 함께 표시
+  let glossaryHits = [];
+  if (currentFilter === 'all' && fuseGlossary) {
+    glossaryHits = fuseGlossary.search(q.trim()).slice(0, 4);
+  }
+  renderResults(results, q, glossaryHits);
 }
 
 function showDefault() {
-  // 검색어 없을 때: 대한펜싱협회 자료 우선으로 전체 표시
-  let items = [...DB].sort((a, b) => a.priority - b.priority || a.page - b.page);
+  if (currentFilter === 'glossary') {
+    renderGlossaryResults(GLOSSARY.map(g => ({ item: g })), '');
+    return;
+  }
+  let items = [...DB].sort((a,b) => a.priority - b.priority || a.page - b.page);
   items = applyFilter(items.map(d => ({ item: d })));
   document.getElementById('stats-count').innerHTML =
-    `총 <strong>${DB.length}</strong>개 항목 로드됨 — 위에서 검색해보세요`;
+    `총 <strong>${DB.length}</strong>개 항목 · 용어 <strong>${GLOSSARY.length}</strong>개 — 위에서 검색해보세요`;
   renderResults(items, '');
 }
 
@@ -511,10 +566,39 @@ function setFilter(f) {
   currentFilter = f;
   currentPage = 1;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  document.getElementById('chip-all').classList.toggle('active', f === 'all');
-  document.getElementById('chip-daepan').classList.toggle('active', f === '대한펜싱협회');
-  document.getElementById('chip-guide').classList.toggle('active', f === '훈련지도서');
+  document.getElementById('chip-all').classList.toggle('active', f==='all');
+  document.getElementById('chip-daepan').classList.toggle('active', f==='대한펜싱협회');
+  document.getElementById('chip-guide').classList.toggle('active', f==='훈련지도서');
+  document.getElementById('chip-glossary').classList.toggle('active', f==='glossary');
   doSearch(currentQuery);
+}
+
+function renderGlossaryResults(results, q) {
+  const container = document.getElementById('results-container');
+  document.getElementById('pagination').innerHTML = '';
+  document.getElementById('stats-count').innerHTML =
+    `📖 용어집 <strong>${results.length}</strong>개`;
+
+  if (!results.length) {
+    container.innerHTML = `<div class="empty"><p>일치하는 용어가 없어요</p></div>`;
+    return;
+  }
+
+  container.innerHTML = results.map(r => {
+    const g = r.item || r;
+    const pron = g.pron ? `<span class="gterm-pron">${escHtml(g.pron)}</span>` : '';
+    const coll = g.colloquial ? `<span class="gterm-coll">구어: ${escHtml(g.colloquial)}</span>` : '';
+    const eng  = g.english ? `<span class="gterm-eng">${escHtml(g.english)}</span>` : '';
+    const meaning = g.meaning ? `<p class="gterm-meaning">${highlight(g.meaning, q)}</p>` : '<p class="gterm-meaning" style="color:var(--muted)">뜻 정보 없음</p>';
+    return `
+      <div class="glossary-card">
+        <div class="gterm-header">
+          <span class="gterm-original">${highlight(g.original, q)}</span>
+          ${pron}${coll}${eng}
+        </div>
+        ${meaning}
+      </div>`;
+  }).join('');
 }
 
 function setSort(s) {
