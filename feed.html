@@ -439,7 +439,8 @@ async function loadYouTube() {
 async function loadAll() {
   document.getElementById('feed-status').textContent = '피드 로딩 중...';
   document.getElementById('masonry').innerHTML = '';
-  await Promise.all([loadReddit(), loadUserMemes(), loadYouTube()]);
+  // allSettled: 하나 실패해도 나머지는 계속
+  await Promise.allSettled([loadReddit(), loadUserMemes(), loadYouTube()]);
   applyFilterSort();
 }
 
@@ -447,6 +448,7 @@ async function loadReddit() {
   try {
     const sort = currentSort === 'top' ? 'top' : 'new';
     const res = await fetch(`https://www.reddit.com/r/fencing/${sort}.json?limit=40&t=month`);
+    if (!res.ok) throw new Error('Reddit API ' + res.status);
     const data = await res.json();
     const posts = data.data.children.map(c => c.data)
       .filter(p => !p.stickied && (
@@ -468,32 +470,44 @@ async function loadReddit() {
     }));
     allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
     allItems.push(...items);
-  } catch(e) { console.warn('Reddit load failed', e); }
+    console.log(`Reddit: ${items.length}개 로드됨`);
+  } catch(e) { console.warn('Reddit load failed:', e); }
 }
 
 async function loadUserMemes() {
-  const { data } = await sb.from('memes')
-    .select('*, profiles(username)')
-    .order('created_at', { ascending: false })
-    .limit(100);
-  if (!data) return;
-  const items = data.map(m => ({
-    id: 'user-' + m.id,
-    dbId: m.id,
-    source: 'user',
-    type: m.type,
-    title: m.title,
-    thumbnail: m.thumbnail_url || m.file_url || '',
-    fileUrl: m.file_url || '',
-    linkUrl: m.link_url || '',
-    url: m.link_url || m.file_url || '#',
-    author: m.profiles?.username || '익명',
-    authorId: m.author_id,
-    likes: m.likes || 0,
-    date: m.created_at,
-  }));
-  allItems = allItems.filter(i => !i.id.startsWith('user-'));
-  allItems.push(...items);
+  try {
+    const { data: memes } = await sb.from('memes')
+      .select('id, type, title, file_url, link_url, thumbnail_url, likes, created_at, author_id')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (!memes || !memes.length) return;
+
+    // 작성자 username 별도 조회
+    const authorIds = [...new Set(memes.map(m => m.author_id))];
+    const profileMap = {};
+    if (authorIds.length) {
+      const { data: profiles } = await sb.from('profiles').select('id, username').in('id', authorIds);
+      (profiles||[]).forEach(p => { profileMap[p.id] = p.username; });
+    }
+
+    const items = memes.map(m => ({
+      id: 'user-' + m.id,
+      dbId: m.id,
+      source: 'user',
+      type: m.type,
+      title: m.title,
+      thumbnail: m.thumbnail_url || m.file_url || '',
+      fileUrl: m.file_url || '',
+      linkUrl: m.link_url || '',
+      url: m.link_url || m.file_url || '#',
+      author: profileMap[m.author_id] || '회원',
+      authorId: m.author_id,
+      likes: m.likes || 0,
+      date: m.created_at,
+    }));
+    allItems = allItems.filter(i => !i.id.startsWith('user-'));
+    allItems.push(...items);
+  } catch(e) { console.warn('User memes load failed:', e); }
 }
 
 /* ── 필터/정렬 ── */
@@ -533,7 +547,11 @@ function renderGrid() {
 
   if (!toShow.length) {
     grid.innerHTML = '';
-    status.textContent = allItems.length ? '이 소스의 콘텐츠가 없어요' : '피드를 불러오지 못했어요';
+    if (allItems.length === 0) {
+      status.innerHTML = 'Reddit 피드를 불러오는 중이에요. 잠시 후 새로고침해보세요. <button onclick="loadAll()" style="margin-left:8px;padding:4px 12px;border:1px solid var(--border-strong);border-radius:6px;background:transparent;cursor:pointer;font-size:12px">다시 시도</button>';
+    } else {
+      status.textContent = '이 소스의 콘텐츠가 없어요';
+    }
     moreBtn.style.display = 'none';
     return;
   }
@@ -738,6 +756,7 @@ async function onLinkInput() {
           }
         }
       } catch(e) { preview.style.display = 'none'; }
+    } else { preview.style.display = 'none'; }
   } else if (uploadType === 'instagram') {
     if (url.includes('instagram.com')) {
       try {
