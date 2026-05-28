@@ -517,7 +517,7 @@
     <div class="nav-links">
       <a href="index.html" class="active">홈</a>
       <a href="rules.html">규정 검색</a>
-      <a href="talk.html">펜싱톡</a>
+      
       <a href="board.html">게시판</a>
       <a href="sites.html">사이트 모음</a>
       <a href="clubs.html">클럽 찾기</a>
@@ -601,23 +601,6 @@
       </div>
     </div>
 
-    <!-- 펜싱톡 -->
-    <div class="card">
-      <div class="sec-header">
-        <div class="sec-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          펜싱톡 최신 글
-        </div>
-        <a href="talk.html" class="sec-more">
-          더보기
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
-      <div class="talk-list" id="talk-list">
-        <!-- JS로 채워짐 -->
-      </div>
-    </div>
-
     <!-- 사이트 모음 미리보기 -->
     <div class="card">
       <div class="sec-header">
@@ -685,10 +668,6 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
           경기규칙
         </a>
-        <a href="talk.html" class="qlink">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          펜싱톡
-        </a>
         <a href="board.html" class="qlink">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           게시판
@@ -716,165 +695,163 @@
   <strong>MAISON DE FENCING</strong> &mdash; 메종드펜싱 &copy; 2025 &nbsp;·&nbsp; 규정 출처: 대한펜싱협회 &nbsp;·&nbsp; 문의: admin@maisonfencing.kr
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* ───────────────────────────────────────────
-   데이터 — 나중에 JSON 파일로 분리 가능
-─────────────────────────────────────────── */
+const SUPABASE_URL = 'https://ldqpimpauuqgxrqteswy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_AtP1YZ-SG-VJ8dSYQnOHww_1z3cZxrw';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const MEMES = [
-  { emoji: '🤺', label: '오늘의 훈련', source: 'reddit', sub: 'r/Fencing', likes: '2.4k' },
-  { emoji: '⚔️', label: 'FIE 2024 하이라이트', source: 'reddit', sub: 'r/Fencing', likes: '1.1k' },
-  { emoji: '🏅', label: '파리 올림픽 레전드', source: 'curator', sub: '큐레이션', likes: '891' },
-  { emoji: '😅', label: '에페 찍힘 당한 날', source: 'reddit', sub: 'r/Fencing', likes: '3.2k' },
-  { emoji: '🎯', label: 'touché 순간', source: 'curator', sub: '큐레이션', likes: '456' },
-  { emoji: '🥇', label: '전국체전 시상식', source: 'reddit', sub: 'r/Fencing', likes: '734' },
-];
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function timeAgo(d) {
+  const diff = (Date.now() - new Date(d)) / 1000;
+  if (diff < 60)     return '방금 전';
+  if (diff < 3600)   return Math.floor(diff/60) + '분 전';
+  if (diff < 86400)  return Math.floor(diff/3600) + '시간 전';
+  if (diff < 604800) return Math.floor(diff/86400) + '일 전';
+  return new Date(d).toLocaleDateString('ko-KR');
+}
+function formatCount(n) {
+  if (!n) return '0';
+  return n >= 1000 ? (n/1000).toFixed(1) + 'k' : String(n);
+}
 
-const TALK = [
-  { title: '2025 전국체전 펜싱 종목 결과 총정리 — 플뢰레 여자부 금메달 이변', views: '3,210', comments: '47', time: '2시간 전' },
-  { title: '입문자를 위한 장비 추천 2025 — 에페 vs 플뢰레 vs 사브르 어떤 걸 먼저?', views: '1,840', comments: '23', time: '어제' },
-  { title: '파리 올림픽 이후 한국 펜싱 저변 확대가 체감되시나요?', views: '920', comments: '61', time: '3일 전' },
-  { title: '세계 랭킹 1위 선수들의 훈련 영상 모음 (2025 업데이트)', views: '2,105', comments: '18', time: '4일 전' },
-];
-
-const POSTS = [
-  { title: '우리 클럽 신입 모집합니다 — 서울 마포구', time: '5분 전', comments: 3, badge: 'new' },
-  { title: '심판 자격증 취득 후기 공유해요', time: '1시간 전', comments: 28, badge: 'hot' },
-  { title: '중고 장비 팝니다 — 사브르 마스크 + 재킷 세트', time: '어제', comments: 7, badge: null },
-  { title: '에페 초보인데 훈련 영상 어디서 보나요?', time: '2일 전', comments: 14, badge: null },
-];
-
-const CLUBS = [
-  { name: '서울 펜싱 아카데미', loc: '강남구 · 2.1km', weapon: '에페', cls: 'tag-epee' },
-  { name: '마포 펜싱 클럽', loc: '마포구 · 3.8km', weapon: '플뢰레', cls: 'tag-foil' },
-  { name: '올림픽 체육관 펜싱부', loc: '송파구 · 5.4km', weapon: '사브르', cls: 'tag-sabre' },
-];
-
-const SITES = [
-  { icon: '🏛', name: '대한펜싱협회', desc: '공식 협회 홈페이지', url: 'https://www.fencing.or.kr' },
-  { icon: '🌍', name: 'FIE 국제펜싱연맹', desc: '세계 랭킹 · 대회 일정', url: 'https://fie.org' },
-  { icon: '🛒', name: '펜싱 용품 쇼핑', desc: '국내 용품 구매처 모음', url: 'sites.html' },
-];
-
-/* ───────────────────────────────────────────
-   렌더링
-─────────────────────────────────────────── */
-
-function renderMemes() {
+/* ── 밈: Reddit r/fencing 실시간 ── */
+async function loadMemes() {
   const grid = document.getElementById('meme-grid');
-  grid.innerHTML = MEMES.map(m => `
-    <div class="meme-card" onclick="location.href='feed.html'">
-      <div class="meme-thumb" style="font-size:44px">
-        ${m.emoji}
-        <span class="meme-source-badge ${m.source === 'reddit' ? 'badge-reddit' : 'badge-curator'}">
-          ${m.source === 'reddit' ? 'Reddit' : '큐레이션'}
-        </span>
-        <div class="meme-thumb-label">${m.label}</div>
-      </div>
-      <div class="meme-meta">
-        <span class="meme-sub-source">${m.sub}</span>
-        <span class="meme-likes">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-          ${m.likes}
-        </span>
-      </div>
-    </div>
-  `).join('');
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;font-size:12px;color:var(--muted)">로딩 중...</div>';
+  try {
+    const res = await fetch('https://www.reddit.com/r/fencing/top.json?limit=30&t=week', {
+      headers: { 'Accept': 'application/json' }
+    });
+    const data = await res.json();
+    const posts = data.data.children.map(c => c.data)
+      .filter(p => !p.stickied && (
+        p.post_hint === 'image' ||
+        p.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+        (p.preview?.images?.length > 0)
+      ))
+      .slice(0, 6);
+
+    if (!posts.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;font-size:12px;color:var(--muted)">현재 이미지 게시물이 없어요</div>'; return; }
+
+    grid.innerHTML = posts.map(p => {
+      const thumb = p.preview?.images?.[0]?.resolutions?.[1]?.url?.replace(/&amp;/g,'&')
+                 || p.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&')
+                 || '';
+      const thumbHtml = thumb
+        ? `<img src="${esc(thumb)}" alt="${esc(p.title)}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\\"display:flex;align-items:center;justify-content:center;height:100%;font-size:36px\\">🤺</div>'">`
+        : '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:36px">🤺</div>';
+      return `
+        <a href="https://reddit.com${esc(p.permalink)}" target="_blank" rel="noopener" class="meme-card">
+          <div class="meme-thumb">
+            ${thumbHtml}
+            <span class="meme-source-badge badge-reddit">Reddit</span>
+          </div>
+          <div class="meme-meta">
+            <span class="meme-sub-source">r/fencing</span>
+            <span class="meme-likes">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg>
+              ${formatCount(p.score)}
+            </span>
+          </div>
+        </a>`;
+    }).join('');
+  } catch(e) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;font-size:12px;color:var(--muted)">피드를 불러오지 못했어요 — <a href="feed.html" style="color:var(--blue)">피드 페이지</a>에서 확인하세요</div>';
+  }
 }
 
-function renderTalk() {
-  const list = document.getElementById('talk-list');
-  list.innerHTML = TALK.map(t => `
-    <div class="talk-item" onclick="location.href='talk.html'">
-      <div class="talk-title">${t.title}</div>
-      <div class="talk-foot">
-        <span>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          ${t.views}
-        </span>
-        <span>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          ${t.comments}
-        </span>
-        <span>${t.time}</span>
-      </div>
-    </div>
-  `).join('');
-}
-
-function renderPosts() {
+/* ── 게시판: Supabase 실시간 ── */
+async function loadPosts() {
   const list = document.getElementById('post-list');
-  list.innerHTML = POSTS.map(p => `
-    <div class="post-item" onclick="location.href='board.html'">
-      <div class="post-title">${p.title}</div>
+  const { data: posts } = await sb
+    .from('posts')
+    .select('id, title, created_at, likes, profiles(username), comments(count)')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (!posts || posts.length === 0) {
+    list.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0;text-align:center">아직 게시글이 없어요</div>';
+    return;
+  }
+  const isNew = d => (Date.now() - new Date(d)) < 86400000;
+  const isHot = p => (p.likes || 0) >= 10;
+  list.innerHTML = posts.map(p => `
+    <div class="post-item" onclick="location.href='board.html#post-${p.id}'">
+      <div class="post-title">${esc(p.title)}</div>
       <div class="post-foot">
-        ${p.badge === 'new' ? '<span class="pill pill-new">NEW</span>' : ''}
-        ${p.badge === 'hot' ? '<span class="pill pill-hot">HOT</span>' : ''}
-        <span>${p.time}</span>
+        ${isNew(p.created_at) ? '<span class="pill pill-new">NEW</span>' : ''}
+        ${isHot(p) ? '<span class="pill pill-hot">HOT</span>' : ''}
+        <span>${timeAgo(p.created_at)}</span>
         <span>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          ${p.comments}
+          ${p.comments?.[0]?.count || 0}
         </span>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-function renderClubs() {
+/* ── 클럽: clubs_db.json 에서 서울 랜덤 3개 ── */
+async function loadClubs() {
   const list = document.getElementById('club-list');
-  list.innerHTML = CLUBS.map(c => `
-    <div class="club-row" onclick="location.href='clubs.html'">
-      <div>
-        <div class="club-name">${c.name}</div>
-        <div class="club-loc">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          ${c.loc}
+  try {
+    const res = await fetch('clubs_db.json');
+    const clubs = await res.json();
+    const seoul = clubs.filter(c => c.region === '서울');
+    const pick = seoul.sort(() => Math.random() - 0.5).slice(0, 3);
+    const TAG = { '에페':'tag-epee', '플뢰레':'tag-foil', '사브르':'tag-sabre' };
+    list.innerHTML = pick.map(c => `
+      <div class="club-row" onclick="location.href='clubs.html'">
+        <div>
+          <div class="club-name">${esc(c.name)}</div>
+          <div class="club-loc">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${esc(c.district)}
+          </div>
         </div>
-      </div>
-      <span class="club-tag-pill ${c.cls}">${c.weapon}</span>
-    </div>
-  `).join('');
+        <span class="club-tag-pill ${TAG[c.weapons[0]] || ''}">${esc(c.weapons[0] || '')}</span>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0">클럽 정보를 불러오지 못했어요</div>';
+  }
 }
 
-function renderSites() {
+/* ── 사이트 모음: 실제 데이터 ── */
+function loadSites() {
+  const SITES = [
+    { icon: '🇰🇷', name: '대한펜싱협회', desc: '국내 대회 · 규정 · 랭킹', url: 'https://fencing.sports.or.kr/' },
+    { icon: '🌍', name: 'FIE 국제펜싱연맹', desc: '세계 랭킹 · 대회 일정', url: 'https://fie.org/' },
+    { icon: '📺', name: 'Fencing TV', desc: 'FIE 공식 무료 생중계', url: 'https://fie.org/live' },
+  ];
   const list = document.getElementById('site-list');
   list.innerHTML = SITES.map(s => `
-    <a href="${s.url}" target="${s.url.startsWith('http') ? '_blank' : '_self'}" class="site-row">
+    <a href="${esc(s.url)}" target="_blank" rel="noopener" class="site-row">
       <div class="site-favicon">${s.icon}</div>
       <div>
-        <div class="site-name">${s.name}</div>
-        <div class="site-desc">${s.desc}</div>
+        <div class="site-name">${esc(s.name)}</div>
+        <div class="site-desc">${esc(s.desc)}</div>
       </div>
       <span class="site-arrow">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </span>
-    </a>
-  `).join('');
+    </a>`).join('');
 }
 
-/* ───────────────────────────────────────────
-   검색
-─────────────────────────────────────────── */
-
+/* ── 검색 ── */
 function goSearch(q) {
   location.href = 'rules.html?q=' + encodeURIComponent(q);
 }
-
 document.getElementById('main-search').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.value.trim()) {
-    goSearch(e.target.value.trim());
-  }
+  if (e.key === 'Enter' && e.target.value.trim()) goSearch(e.target.value.trim());
 });
 
-/* ───────────────────────────────────────────
-   Init
-─────────────────────────────────────────── */
-
-renderMemes();
-renderTalk();
-renderPosts();
-renderClubs();
-renderSites();
+/* ── Init ── */
+loadMemes();
+loadPosts();
+loadClubs();
+loadSites();
 </script>
 </body>
 </html>
