@@ -6,6 +6,7 @@
 <title>펜싱 피드 — 메종드펜싱</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -15,181 +16,145 @@
     --red: #C0392B; --red-bg: #FAF0EE;
     --teal: #1A6B5A; --teal-bg: #E8F4F0;
     --blue: #1A4A7A; --blue-bg: #EAF0F8;
-    --orange: #C84B11; --orange-bg: #FEF0E8;
-    --youtube: #FF0000;
-    --reddit: #FF4500;
+    --youtube: #FF0000; --reddit: #FF4500;
     --font-display: 'Cormorant Garamond', Georgia, serif;
     --font-body: 'Noto Sans KR', sans-serif;
   }
   html { scroll-behavior: smooth; }
   body { font-family: var(--font-body); background: var(--cream); color: var(--ink); font-size: 14px; line-height: 1.6; }
   a { text-decoration: none; color: inherit; }
+  button { font-family: var(--font-body); cursor: pointer; }
 
   /* Nav */
-  .nav { background: var(--paper); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .nav { background: var(--paper); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 200; }
   .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; height: 56px; display: flex; align-items: center; }
   .nav-logo { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: 2px; margin-right: 36px; white-space: nowrap; }
   .nav-logo em { color: var(--red); font-style: normal; }
-  .nav-links { display: flex; gap: 2px; }
+  .nav-links { display: flex; gap: 2px; flex: 1; }
   .nav-links a { font-size: 13px; color: var(--muted); padding: 5px 11px; border-radius: 6px; transition: all .15s; }
   .nav-links a:hover { background: var(--cream); color: var(--ink); }
   .nav-links a.active { background: var(--cream); color: var(--ink); font-weight: 500; }
+  .nav-auth { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .btn-sm { font-size: 13px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border-strong); background: transparent; color: var(--muted); transition: all .15s; }
+  .btn-sm:hover { background: var(--cream); color: var(--ink); }
+  .btn-sm.primary { background: var(--ink); color: var(--cream); border-color: var(--ink); }
 
   /* Header */
   .page-header { background: var(--ink); padding: 32px 32px 28px; }
   .page-header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
   .page-header h1 { font-family: var(--font-display); font-size: 36px; font-weight: 400; letter-spacing: 2px; color: var(--cream); }
   .page-header p { font-size: 12px; color: rgba(245,242,236,0.4); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 6px; }
-
-  /* API key setup banner */
-  .setup-banner {
-    background: #FFFBEA;
-    border-bottom: 1px solid #F0D080;
-    padding: 10px 32px;
-    display: none;
-    align-items: center;
-    gap: 12px;
-    font-size: 13px;
-    color: #7A5500;
-  }
-  .setup-banner.show { display: flex; }
-  .setup-banner strong { font-weight: 500; }
-  .setup-banner a { color: var(--blue); text-decoration: underline; }
-  .setup-banner input {
-    flex: 1; max-width: 380px; padding: 5px 10px; border: 1px solid #D0B060;
-    border-radius: 6px; font-size: 12px; font-family: monospace; background: #fff;
-  }
-  .setup-banner button {
-    padding: 5px 14px; background: var(--ink); color: var(--cream); border: none;
-    border-radius: 6px; font-size: 12px; cursor: pointer; font-family: var(--font-body);
-  }
+  .btn-upload { display: flex; align-items: center; gap: 6px; padding: 10px 20px; background: var(--red); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; transition: opacity .15s; }
+  .btn-upload:hover { opacity: .85; }
 
   /* Filter bar */
   .filter-bar { background: var(--paper); border-bottom: 1px solid var(--border); padding: 12px 32px; }
   .filter-bar-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .filter-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-right: 4px; }
-  .chip { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border-strong); color: var(--muted); cursor: pointer; transition: all .15s; background: transparent; font-family: var(--font-body); display: flex; align-items: center; gap: 5px; }
+  .filter-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+  .chip { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border-strong); color: var(--muted); cursor: pointer; transition: all .15s; background: transparent; display: flex; align-items: center; gap: 5px; }
   .chip:hover { border-color: var(--ink); color: var(--ink); }
   .chip.active { background: var(--ink); border-color: var(--ink); color: var(--cream); }
   .chip-dot { width: 7px; height: 7px; border-radius: 50%; }
   .dot-reddit { background: var(--reddit); }
-  .dot-youtube { background: var(--youtube); }
-  .dot-curator { background: var(--teal); }
+  .dot-user { background: var(--teal); }
   .divider-v { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
-  .sort-chip { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); cursor: pointer; background: transparent; font-family: var(--font-body); transition: all .15s; }
+  .sort-chip { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); cursor: pointer; background: transparent; transition: all .15s; }
   .sort-chip.active { background: var(--faint); color: var(--ink); border-color: var(--border-strong); }
 
-  /* Masonry grid */
+  /* Masonry */
   .grid-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
-  .masonry {
-    columns: 4;
-    column-gap: 14px;
-  }
+  .masonry { columns: 4; column-gap: 14px; }
   @media (max-width: 1100px) { .masonry { columns: 3; } }
   @media (max-width: 750px)  { .masonry { columns: 2; } }
-  @media (max-width: 480px)  { .masonry { columns: 1; } }
 
-  .card {
-    break-inside: avoid;
-    margin-bottom: 14px;
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: border-color .15s, transform .15s;
-    display: block;
-  }
+  .card { break-inside: avoid; margin-bottom: 14px; background: var(--paper); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: border-color .15s, transform .15s; }
   .card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .card-link { display: block; text-decoration: none; color: inherit; }
 
-  /* Thumbnail */
-  .thumb {
-    width: 100%;
-    background: var(--faint);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  .thumb { width: 100%; background: var(--faint); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
   .thumb img { width: 100%; display: block; object-fit: cover; }
-  .thumb-placeholder {
-    width: 100%;
-    padding: 32px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 52px;
-    min-height: 160px;
-    background: var(--faint);
-  }
-  .play-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(28,26,23,0.25);
-    opacity: 0;
-    transition: opacity .2s;
-  }
+  .thumb video { width: 100%; display: block; max-height: 280px; object-fit: cover; }
+  .thumb-placeholder { width: 100%; padding: 32px 20px; display: flex; align-items: center; justify-content: center; font-size: 52px; min-height: 160px; background: var(--faint); }
+
+  .play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(28,26,23,0.25); opacity: 0; transition: opacity .2s; }
   .card:hover .play-overlay { opacity: 1; }
-  .play-btn {
-    width: 44px; height: 44px; border-radius: 50%;
-    background: rgba(255,255,255,0.9);
-    display: flex; align-items: center; justify-content: center;
-  }
+  .play-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; }
   .play-btn svg { margin-left: 3px; }
 
-  /* Source badge */
-  .source-badge {
-    position: absolute;
-    top: 8px; left: 8px;
-    font-size: 10px; font-weight: 500;
-    padding: 3px 8px; border-radius: 4px;
-    backdrop-filter: blur(4px);
-  }
+  .source-badge { position: absolute; top: 8px; left: 8px; font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
   .badge-reddit  { background: rgba(255,69,0,0.85); color: #fff; }
-  .badge-youtube { background: rgba(255,0,0,0.85);  color: #fff; }
-  .badge-curator { background: rgba(26,107,90,0.85); color: #fff; }
+  .badge-youtube { background: rgba(255,0,0,0.85); color: #fff; }
+  .badge-user    { background: rgba(26,107,90,0.9); color: #fff; }
 
-  /* Card body */
-  .card-body { padding: 10px 12px 12px; }
+  .card-body { padding: 10px 12px 10px; }
   .card-title { font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--muted); }
-  .card-channel { display: flex; align-items: center; gap: 4px; }
-  .card-channel svg { opacity: 0.5; }
-  .card-stats { display: flex; align-items: center; gap: 8px; }
-  .card-stats span { display: flex; align-items: center; gap: 3px; }
+  .card-author { display: flex; align-items: center; gap: 4px; }
+  .card-actions { display: flex; align-items: center; gap: 8px; }
+  .like-btn { display: flex; align-items: center; gap: 3px; background: none; border: none; font-size: 11px; color: var(--muted); padding: 2px 4px; border-radius: 4px; transition: all .15s; }
+  .like-btn:hover, .like-btn.liked { color: var(--red); }
+  .del-btn { background: none; border: none; font-size: 11px; color: var(--muted); padding: 2px 4px; border-radius: 4px; transition: color .15s; }
+  .del-btn:hover { color: var(--red); }
 
-  /* Loading / empty states */
   .feed-status { text-align: center; padding: 20px; font-size: 13px; color: var(--muted); }
-  .section-header {
-    font-family: var(--font-display);
-    font-size: 16px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    color: var(--muted);
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .section-header span { font-size: 11px; color: var(--muted); opacity: 0.6; }
+  .load-more-btn { display: none; margin: 0 auto 32px; padding: 10px 32px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--paper); color: var(--muted); font-size: 13px; transition: all .15s; }
+  .load-more-btn:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); }
 
-  /* Channel pills */
-  .channels-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-  .ch-pill {
-    font-size: 11px; padding: 3px 10px; border-radius: 20px;
-    background: var(--faint); color: var(--muted);
-    display: flex; align-items: center; gap: 4px;
-    border: 1px solid var(--border);
-  }
-  .ch-dot { width: 6px; height: 6px; border-radius: 50%; }
-  .ch-dot-yt  { background: var(--youtube); }
-  .ch-dot-rd  { background: var(--reddit); }
+  /* ── Upload Modal ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(28,26,23,0.55); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--paper); border-radius: 16px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+  .modal-header { padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h2 { font-family: var(--font-display); font-size: 22px; font-weight: 500; letter-spacing: 1px; }
+  .modal-close { background: none; border: none; font-size: 22px; color: var(--muted); line-height: 1; }
+  .modal-body { padding: 20px 24px 24px; }
+
+  /* Type tabs */
+  .type-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+  .type-tab { flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: transparent; font-size: 12px; color: var(--muted); cursor: pointer; transition: all .15s; display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: var(--font-body); }
+  .type-tab:hover { border-color: var(--border-strong); color: var(--ink); }
+  .type-tab.active { background: var(--ink); border-color: var(--ink); color: var(--cream); }
+  .type-tab svg { opacity: .7; }
+  .type-tab.active svg { opacity: 1; }
+
+  /* Drop zone */
+  .drop-zone { border: 2px dashed var(--border-strong); border-radius: 10px; padding: 32px 20px; text-align: center; cursor: pointer; transition: all .15s; position: relative; }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--ink); background: var(--faint); }
+  .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .drop-zone p { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .drop-zone strong { font-size: 14px; color: var(--ink); }
+  .preview-wrap { margin-top: 12px; border-radius: 8px; overflow: hidden; display: none; }
+  .preview-wrap img, .preview-wrap video { width: 100%; max-height: 200px; object-fit: cover; display: block; }
+
+  /* Link input */
+  .link-input-wrap { display: none; }
+  .link-input-wrap input { width: 100%; padding: 11px 14px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 14px; color: var(--ink); background: var(--cream); outline: none; transition: border-color .15s; font-family: var(--font-body); }
+  .link-input-wrap input:focus { border-color: var(--ink); }
+  .link-preview { margin-top: 10px; display: none; background: var(--faint); border-radius: 8px; overflow: hidden; }
+  .link-preview img { width: 100%; max-height: 160px; object-fit: cover; }
+  .link-preview-info { padding: 8px 12px; font-size: 12px; color: var(--muted); }
+
+  /* Title input */
+  .form-group { margin-top: 14px; }
+  .form-group label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: .5px; display: block; margin-bottom: 5px; }
+  .form-group input { width: 100%; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 14px; color: var(--ink); background: var(--cream); outline: none; transition: border-color .15s; font-family: var(--font-body); }
+  .form-group input:focus { border-color: var(--ink); }
+
+  .upload-progress { margin-top: 10px; height: 4px; background: var(--faint); border-radius: 2px; overflow: hidden; display: none; }
+  .upload-progress-bar { height: 100%; background: var(--teal); border-radius: 2px; transition: width .3s; width: 0%; }
+  .error-msg { font-size: 12px; color: var(--red); margin-top: 8px; display: none; }
+  .error-msg.show { display: block; }
+
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+  .cancel-btn { flex: 1; padding: 10px; border: 1px solid var(--border-strong); border-radius: 8px; background: transparent; color: var(--muted); font-size: 13px; transition: all .15s; }
+  .cancel-btn:hover { background: var(--faint); }
+  .submit-btn { flex: 2; padding: 10px; background: var(--ink); color: var(--cream); border: none; border-radius: 8px; font-size: 13px; font-weight: 500; transition: opacity .15s; }
+  .submit-btn:hover { opacity: .85; }
+  .submit-btn:disabled { opacity: .4; cursor: default; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--cream); font-size: 13px; padding: 10px 20px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 999; white-space: nowrap; }
+  .toast.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -200,54 +165,39 @@
     <div class="nav-links">
       <a href="index.html">홈</a>
       <a href="rules.html">규정 검색</a>
-      <a href="talk.html">펜싱톡</a>
       <a href="board.html">게시판</a>
+      <a href="feed.html" class="active">펜싱 피드</a>
       <a href="sites.html">사이트 모음</a>
       <a href="clubs.html">클럽 찾기</a>
     </div>
+    <div class="nav-auth" id="nav-auth">
+      <button class="btn-sm" onclick="showAuthPrompt()">로그인</button>
+    </div>
   </div>
 </nav>
-
-<!-- YouTube API 키 설정 배너 (키 없을 때만 표시) -->
-<div class="setup-banner" id="api-banner">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-  <span><strong>YouTube 피드 활성화:</strong> <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a>에서 YouTube Data API v3 키를 발급해 입력하면 유튜버 피드가 표시됩니다.</span>
-  <input type="text" id="yt-key-input" placeholder="AIza... (YouTube Data API v3 키)">
-  <button onclick="saveYtKey()">저장</button>
-  <button onclick="document.getElementById('api-banner').classList.remove('show')" style="background:transparent;color:var(--muted);border:1px solid #D0B060;">닫기</button>
-</div>
 
 <div class="page-header">
   <div class="page-header-inner">
     <div>
       <h1>펜싱 피드</h1>
-      <p>Reddit · YouTube · 큐레이션 — 해외 펜싱 콘텐츠 모음</p>
+      <p>Reddit · 회원 업로드 · 해외 펜싱 콘텐츠</p>
     </div>
-    <div class="channels-row">
-      <span class="ch-pill"><span class="ch-dot ch-dot-rd"></span>r/fencing</span>
-      <span class="ch-pill"><span class="ch-dot ch-dot-yt"></span>SlicerSabre</span>
-      <span class="ch-pill"><span class="ch-dot ch-dot-yt"></span>FencingTuna</span>
-      <span class="ch-pill"><span class="ch-dot ch-dot-yt"></span>FencingNut</span>
-      <span class="ch-pill"><span class="ch-dot ch-dot-yt"></span>Untouche</span>
-      <span class="ch-pill"><span class="ch-dot ch-dot-yt"></span>FencingComedyClub</span>
-    </div>
+    <button class="btn-upload" id="btn-upload" onclick="openUpload()" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      밈 올리기
+    </button>
   </div>
 </div>
 
 <div class="filter-bar">
   <div class="filter-bar-inner">
     <span class="filter-label">소스</span>
-    <button class="chip active" id="chip-all" onclick="setFilter('all')">
-      전체
-    </button>
+    <button class="chip active" id="chip-all" onclick="setFilter('all')">전체</button>
     <button class="chip" id="chip-reddit" onclick="setFilter('reddit')">
-      <span class="chip-dot dot-reddit"></span> Reddit r/fencing
+      <span class="chip-dot dot-reddit"></span> Reddit
     </button>
-    <button class="chip" id="chip-youtube" onclick="setFilter('youtube')">
-      <span class="chip-dot dot-youtube"></span> YouTube
-    </button>
-    <button class="chip" id="chip-curator" onclick="setFilter('curator')">
-      <span class="chip-dot dot-curator"></span> 큐레이션
+    <button class="chip" id="chip-user" onclick="setFilter('user')">
+      <span class="chip-dot dot-user"></span> 회원 업로드
     </button>
     <div class="divider-v"></div>
     <span class="filter-label">정렬</span>
@@ -259,298 +209,524 @@
 <div class="grid-wrap">
   <div id="masonry" class="masonry"></div>
   <div id="feed-status" class="feed-status">피드 로딩 중...</div>
-  <div style="text-align:center;margin-top:20px">
-    <button id="load-more" style="display:none;padding:10px 32px;border:1px solid var(--border-strong);border-radius:8px;background:var(--paper);color:var(--muted);font-size:13px;cursor:pointer;font-family:var(--font-body);transition:all .15s" onmouseover="this.style.background='var(--ink)';this.style.color='var(--cream)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--muted)'" onclick="loadMore()">
-      더 불러오기
-    </button>
+  <button class="load-more-btn" id="load-more" onclick="loadMore()">더 불러오기</button>
+</div>
+
+<!-- 업로드 모달 -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>밈 올리기</h2>
+      <button class="modal-close" onclick="closeUpload()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- 타입 선택 -->
+      <div class="type-tabs">
+        <button class="type-tab active" id="tab-image" onclick="setUploadType('image')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          이미지
+        </button>
+        <button class="type-tab" id="tab-video" onclick="setUploadType('video')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          영상
+        </button>
+        <button class="type-tab" id="tab-youtube" onclick="setUploadType('youtube')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20.06 12 20.06 12 20.06s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/></svg>
+          YouTube
+        </button>
+        <button class="type-tab" id="tab-reddit" onclick="setUploadType('reddit')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          Reddit 링크
+        </button>
+      </div>
+
+      <!-- 파일 업로드 -->
+      <div id="file-upload-area">
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" accept="image/*">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:8px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <strong>클릭하거나 파일을 드래그해서 올려주세요</strong>
+          <p id="file-hint">JPG, PNG, GIF, WebP · 최대 10MB</p>
+        </div>
+        <div class="preview-wrap" id="preview-wrap">
+          <img id="preview-img" src="" alt="" style="display:none">
+          <video id="preview-video" controls style="display:none"></video>
+        </div>
+      </div>
+
+      <!-- 링크 입력 -->
+      <div class="link-input-wrap" id="link-input-area">
+        <input type="url" id="link-input" placeholder="링크를 붙여넣으세요..." oninput="onLinkInput()">
+        <div class="link-preview" id="link-preview">
+          <img id="link-thumb" src="" alt="">
+          <div class="link-preview-info" id="link-preview-info"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>제목 / 한 줄 설명</label>
+        <input type="text" id="upload-title" placeholder="어떤 내용인가요?" maxlength="100">
+      </div>
+
+      <div class="upload-progress" id="upload-progress">
+        <div class="upload-progress-bar" id="upload-progress-bar"></div>
+      </div>
+      <div class="error-msg" id="upload-error"></div>
+
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeUpload()">취소</button>
+        <button class="submit-btn" id="submit-btn" onclick="submitUpload()">올리기</button>
+      </div>
+    </div>
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-/* ─────────────────────────────────────────
-   CONFIG — YouTube 채널 목록
-   YouTube Data API v3 키를 넣으면 자동 활성화
-──────────────────────────────────────────*/
-const YT_CHANNELS = [
-  { handle: 'SlicerSabre',         id: 'UCrqJJBMmFkLTAkRbABQN5sA', name: 'SlicerSabre',          weapon: 'sabre' },
-  { handle: 'fencingtuna',          id: '',                          name: 'FencingTuna',           weapon: 'general' },
-  { handle: 'fencingnut',           id: '',                          name: 'FencingNut',            weapon: 'general' },
-  { handle: 'untouche',             id: '',                          name: 'Untouche',              weapon: 'general' },
-  { handle: 'fencingcomedyclub',    id: '',                          name: 'FencingComedyClub',     weapon: 'comedy'  },
-  { handle: 'FIEFencingChannel',    id: 'UCJEy8aBnqDymMIcJCh72gMw', name: 'FIE Fencing',           weapon: 'official'},
-  { handle: 'CyrusofChaos',         id: '',                          name: 'CyrusofChaos',          weapon: 'epee'    },
-  { handle: 'MissFencing',          id: 'UCMtQkmZV3UzkBJULrpe0V0w',  name: 'Miss Fencing',          weapon: 'general' },
-];
+/* ── Supabase ── */
+const SUPABASE_URL = 'https://ldqpimpauuqgxrqteswy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_AtP1YZ-SG-VJ8dSYQnOHww_1z3cZxrw';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const REDDIT_SUBS = ['fencing'];
-
-// ── 상태 ──
+/* ── 상태 ── */
+let currentUser = null;
+let currentProfile = null;
 let allItems = [];
 let filteredItems = [];
 let currentFilter = 'all';
 let currentSort = 'new';
 let displayCount = 24;
-let ytKey = localStorage.getItem('mdf_yt_key') || '';
+let uploadType = 'image';
+let selectedFile = null;
+let linkThumbUrl = '';
 
-// ── YouTube 키 관리 ──
-function saveYtKey() {
-  const val = document.getElementById('yt-key-input').value.trim();
-  if (!val.startsWith('AIza')) { alert('올바른 YouTube API 키 형식이 아닙니다 (AIza...로 시작)'); return; }
-  ytKey = val;
-  localStorage.setItem('mdf_yt_key', val);
-  document.getElementById('api-banner').classList.remove('show');
-  loadYouTube();
-}
-
-if (!ytKey) {
-  document.getElementById('api-banner').classList.add('show');
-}
-
-// ── 유틸 ──
-function formatCount(n) {
-  if (!n) return '0';
-  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n/1000).toFixed(1) + 'k';
-  return String(n);
-}
-function timeAgo(dateStr) {
-  const diff = (Date.now() - new Date(dateStr)) / 1000;
-  if (diff < 3600)   return Math.floor(diff/60) + '분 전';
-  if (diff < 86400)  return Math.floor(diff/3600) + '시간 전';
+/* ── 유틸 ── */
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function timeAgo(d) {
+  const diff = (Date.now() - new Date(d)) / 1000;
+  if (diff < 60) return '방금 전';
+  if (diff < 3600) return Math.floor(diff/60) + '분 전';
+  if (diff < 86400) return Math.floor(diff/3600) + '시간 전';
   if (diff < 604800) return Math.floor(diff/86400) + '일 전';
-  if (diff < 2592000) return Math.floor(diff/604800) + '주 전';
-  return Math.floor(diff/2592000) + '개월 전';
+  return new Date(d).toLocaleDateString('ko-KR');
 }
-function escHtml(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function formatCount(n) { return n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n||0); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+function getYouTubeId(url) {
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+function getRedditId(url) {
+  const m = url.match(/reddit\.com\/r\/\w+\/comments\/(\w+)/);
+  return m ? m[1] : null;
 }
 
-// ── Reddit 로드 ──
-async function loadReddit() {
-  try {
-    const sort = currentSort === 'top' ? 'top' : 'new';
-    const url = `https://www.reddit.com/r/fencing/${sort}.json?limit=40&t=month`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-    const data = await res.json();
-    const posts = data.data.children.map(c => c.data);
-
-    const items = posts
-      .filter(p => !p.stickied && (p.post_hint === 'image' || p.is_video || p.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) || p.thumbnail?.startsWith('http')))
-      .map(p => ({
-        id: 'reddit-' + p.id,
-        source: 'reddit',
-        platform: 'Reddit',
-        type: p.is_video ? 'video' : 'image',
-        title: p.title,
-        thumbnail: p.preview?.images?.[0]?.resolutions?.[2]?.url?.replace(/&amp;/g,'&') ||
-                   p.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&') ||
-                   (p.thumbnail?.startsWith('http') ? p.thumbnail : null),
-        url: 'https://reddit.com' + p.permalink,
-        channel: 'r/fencing',
-        channelUrl: 'https://reddit.com/r/fencing',
-        likes: p.score,
-        comments: p.num_comments,
-        date: new Date(p.created_utc * 1000).toISOString(),
-        emoji: p.is_video ? '🎬' : '🤺',
-      }));
-
-    addItems(items);
-  } catch(e) {
-    console.warn('Reddit 로드 실패:', e);
-    addItems([]);
+/* ── Auth ── */
+async function initAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) await setUser(session.user);
+  sb.auth.onAuthStateChange(async (_, session) => {
+    if (session) await setUser(session.user);
+    else clearUser();
+  });
+}
+async function setUser(user) {
+  currentUser = user;
+  const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  currentProfile = data;
+  renderNavAuth();
+}
+function clearUser() { currentUser = null; currentProfile = null; renderNavAuth(); }
+function renderNavAuth() {
+  const el = document.getElementById('nav-auth');
+  const uploadBtn = document.getElementById('btn-upload');
+  if (currentProfile) {
+    el.innerHTML = `<span style="font-size:13px;color:var(--muted)"><strong style="color:var(--ink)">${esc(currentProfile.username)}</strong> 님</span><button class="btn-sm" onclick="logout()">로그아웃</button>`;
+    uploadBtn.style.display = 'flex';
+  } else {
+    el.innerHTML = `<button class="btn-sm" onclick="showAuthPrompt()">로그인</button><button class="btn-sm primary" onclick="showAuthPrompt()">회원가입</button>`;
+    uploadBtn.style.display = 'none';
   }
 }
+function showAuthPrompt() { location.href = 'board.html'; }
+async function logout() { await sb.auth.signOut(); showToast('로그아웃 됐어요'); }
 
-// ── YouTube 로드 ──
-async function loadYouTube() {
-  if (!ytKey) return;
-
-  const validChannels = YT_CHANNELS.filter(c => c.id);
-  const promises = validChannels.map(ch => fetchYTChannel(ch));
-  const results = await Promise.allSettled(promises);
-
-  const items = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
-  addItems(items);
-}
-
-async function fetchYTChannel(ch) {
-  try {
-    const url = `https://www.googleapis.com/youtube/v3/search?channelId=${ch.id}&part=snippet&order=date&maxResults=10&type=video&key=${ytKey}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('YT API error ' + res.status);
-    const data = await res.json();
-
-    return (data.items || []).map(item => ({
-      id: 'yt-' + item.id.videoId,
-      source: 'youtube',
-      platform: 'YouTube',
-      type: 'video',
-      title: item.snippet.title,
-      thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
-      url: 'https://www.youtube.com/watch?v=' + item.id.videoId,
-      channel: ch.name,
-      channelUrl: 'https://youtube.com/@' + ch.handle,
-      likes: null,
-      comments: null,
-      date: item.snippet.publishedAt,
-      emoji: '▶️',
-      weapon: ch.weapon,
-    }));
-  } catch(e) {
-    console.warn(`YouTube 채널 ${ch.name} 로드 실패:`, e);
-    return [];
-  }
-}
-
-// ── 큐레이션 로드 ──
-async function loadCurated() {
-  try {
-    const res = await fetch('feed_curated.json');
-    if (!res.ok) return;
-    const data = await res.json();
-    const items = data.map(d => ({
-      ...d,
-      source: 'curator',
-      platform: d.platform || '큐레이션',
-      type: d.type || 'image',
-      emoji: '⭐',
-    }));
-    addItems(items);
-  } catch(e) {
-    // 파일 없어도 무시
-  }
-}
-
-// ── 아이템 추가 및 렌더링 ──
-function addItems(newItems) {
-  allItems.push(...newItems);
+/* ── 피드 로드 ── */
+async function loadAll() {
+  document.getElementById('feed-status').textContent = '피드 로딩 중...';
+  document.getElementById('masonry').innerHTML = '';
+  await Promise.all([loadReddit(), loadUserMemes()]);
   applyFilterSort();
 }
 
+async function loadReddit() {
+  try {
+    const sort = currentSort === 'top' ? 'top' : 'new';
+    const res = await fetch(`https://www.reddit.com/r/fencing/${sort}.json?limit=40&t=month`);
+    const data = await res.json();
+    const posts = data.data.children.map(c => c.data)
+      .filter(p => !p.stickied && (
+        p.post_hint === 'image' ||
+        p.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+        p.preview?.images?.length > 0
+      ));
+    const items = posts.map(p => ({
+      id: 'reddit-' + p.id,
+      source: 'reddit',
+      type: 'image',
+      title: p.title,
+      thumbnail: p.preview?.images?.[0]?.resolutions?.[1]?.url?.replace(/&amp;/g,'&')
+              || p.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&') || '',
+      url: 'https://reddit.com' + p.permalink,
+      author: 'r/fencing',
+      likes: p.score,
+      date: new Date(p.created_utc * 1000).toISOString(),
+    }));
+    allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
+    allItems.push(...items);
+  } catch(e) { console.warn('Reddit load failed', e); }
+}
+
+async function loadUserMemes() {
+  const { data } = await sb.from('memes')
+    .select('*, profiles(username)')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (!data) return;
+  const items = data.map(m => ({
+    id: 'user-' + m.id,
+    dbId: m.id,
+    source: 'user',
+    type: m.type,
+    title: m.title,
+    thumbnail: m.thumbnail_url || m.file_url || '',
+    fileUrl: m.file_url || '',
+    linkUrl: m.link_url || '',
+    url: m.link_url || m.file_url || '#',
+    author: m.profiles?.username || '익명',
+    authorId: m.author_id,
+    likes: m.likes || 0,
+    date: m.created_at,
+  }));
+  allItems = allItems.filter(i => !i.id.startsWith('user-'));
+  allItems.push(...items);
+}
+
+/* ── 필터/정렬 ── */
 function applyFilterSort() {
   let items = [...allItems];
-
-  // 필터
-  if (currentFilter !== 'all') {
-    items = items.filter(i => i.source === currentFilter);
-  }
-
-  // 정렬
-  if (currentSort === 'top') {
-    items.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-  } else {
-    items.sort((a, b) => new Date(b.date) - new Date(a.date));
-  }
-
+  if (currentFilter === 'reddit') items = items.filter(i => i.source === 'reddit');
+  if (currentFilter === 'user')   items = items.filter(i => i.source === 'user');
+  if (currentSort === 'top') items.sort((a,b) => (b.likes||0) - (a.likes||0));
+  else items.sort((a,b) => new Date(b.date) - new Date(a.date));
   filteredItems = items;
+  displayCount = 24;
   renderGrid();
 }
 
+function setFilter(f) {
+  currentFilter = f;
+  ['all','reddit','user'].forEach(k => document.getElementById('chip-'+k)?.classList.remove('active'));
+  document.getElementById('chip-'+f).classList.add('active');
+  applyFilterSort();
+}
+function setSort(s) {
+  currentSort = s;
+  document.querySelectorAll('.sort-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('sort-'+s).classList.add('active');
+  allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
+  loadReddit().then(() => applyFilterSort());
+}
+function loadMore() { displayCount += 24; renderGrid(); }
+
+/* ── 렌더링 ── */
 function renderGrid() {
   const grid = document.getElementById('masonry');
   const status = document.getElementById('feed-status');
   const moreBtn = document.getElementById('load-more');
-
   const toShow = filteredItems.slice(0, displayCount);
 
-  if (toShow.length === 0) {
+  if (!toShow.length) {
     grid.innerHTML = '';
-    status.textContent = allItems.length === 0
-      ? '피드 로딩 중...'
-      : '이 소스의 콘텐츠가 없어요.';
+    status.textContent = allItems.length ? '이 소스의 콘텐츠가 없어요' : '피드를 불러오지 못했어요';
     moreBtn.style.display = 'none';
     return;
   }
-
   status.textContent = '';
   grid.innerHTML = toShow.map(item => renderCard(item)).join('');
   moreBtn.style.display = filteredItems.length > displayCount ? 'block' : 'none';
 }
 
 function renderCard(item) {
-  const badgeClass = {
-    reddit:  'badge-reddit',
-    youtube: 'badge-youtube',
-    curator: 'badge-curator',
-  }[item.source] || 'badge-curator';
+  const isUserItem = item.source === 'user';
+  const isOwner = currentUser && item.authorId === currentUser.id;
+  const badgeClass = { reddit:'badge-reddit', user:'badge-user', youtube:'badge-youtube' }[item.source] || 'badge-user';
+  const badgeLabel = { reddit:'Reddit', user:'회원 업로드', youtube:'YouTube' }[item.source] || '업로드';
 
-  const platformLabel = {
-    reddit:  'Reddit',
-    youtube: 'YouTube',
-    curator: '큐레이션',
-  }[item.source] || item.platform;
+  let thumbHtml = '';
+  if (item.type === 'video' && item.fileUrl) {
+    thumbHtml = `<video src="${esc(item.fileUrl)}" muted playsinline style="width:100%;max-height:220px;object-fit:cover;display:block"></video>`;
+  } else if (item.thumbnail) {
+    thumbHtml = `<img src="${esc(item.thumbnail)}" alt="${esc(item.title)}" loading="lazy" style="width:100%;display:block;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\\"padding:40px 0;text-align:center;font-size:40px\\">🤺</div>'">`;
+  } else {
+    thumbHtml = `<div style="padding:40px 0;text-align:center;font-size:40px">🤺</div>`;
+  }
 
-  const thumbHtml = item.thumbnail
-    ? `<img src="${escHtml(item.thumbnail)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\"thumb-placeholder\\">${item.emoji}</div>'">`
-    : `<div class="thumb-placeholder">${item.emoji}</div>`;
+  const isVideo = item.type === 'video' || item.type === 'youtube';
+  const playOverlay = isVideo ? `<div class="play-overlay"><div class="play-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="${'var(--ink)'}"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>` : '';
 
-  const statsHtml = [
-    item.likes    != null ? `<span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>${formatCount(item.likes)}</span>` : '',
-    item.comments != null ? `<span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${formatCount(item.comments)}</span>` : '',
-    `<span>${timeAgo(item.date)}</span>`,
-  ].filter(Boolean).join('');
+  const target = item.url === '#' ? '' : 'target="_blank" rel="noopener"';
+  const href = item.url || '#';
+
+  const userActions = isUserItem ? `
+    <button class="like-btn ${item.liked ? 'liked' : ''}" onclick="event.preventDefault();toggleMemeLike('${item.dbId}',this)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="${item.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      ${formatCount(item.likes)}
+    </button>
+    ${isOwner ? `<button class="del-btn" onclick="event.preventDefault();deleteMeme('${item.dbId}')">삭제</button>` : ''}
+  ` : `<span>${formatCount(item.likes)}</span>`;
 
   return `
-    <a href="${escHtml(item.url)}" target="_blank" rel="noopener" class="card">
-      <div class="thumb">
-        ${thumbHtml}
-        <span class="source-badge ${badgeClass}">${platformLabel}</span>
-        ${item.type === 'video' ? `
-        <div class="play-overlay">
-          <div class="play-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--ink)"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          </div>
-        </div>` : ''}
-      </div>
-      <div class="card-body">
-        <div class="card-title">${escHtml(item.title)}</div>
-        <div class="card-meta">
-          <span class="card-channel">
-            ${item.source === 'youtube' ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20.06 12 20.06 12 20.06s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>` : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>`}
-            ${escHtml(item.channel)}
-          </span>
-          <div class="card-stats">${statsHtml}</div>
+    <div class="card" id="card-user-${item.dbId || ''}">
+      <a href="${esc(href)}" ${target} class="card-link">
+        <div class="thumb">
+          ${thumbHtml}
+          <span class="source-badge ${badgeClass}">${badgeLabel}</span>
+          ${playOverlay}
         </div>
-      </div>
-    </a>`;
+        <div class="card-body">
+          <div class="card-title">${esc(item.title)}</div>
+          <div class="card-meta">
+            <span class="card-author">${esc(item.author)}</span>
+            <div class="card-actions">${userActions}<span>${timeAgo(item.date)}</span></div>
+          </div>
+        </div>
+      </a>
+    </div>`;
 }
 
-function loadMore() {
-  displayCount += 24;
-  renderGrid();
-}
-
-function setFilter(f) {
-  currentFilter = f;
-  displayCount = 24;
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  document.getElementById('chip-' + f).classList.add('active');
-  applyFilterSort();
-}
-
-function setSort(s) {
-  currentSort = s;
-  displayCount = 24;
-  document.querySelectorAll('.sort-chip').forEach(c => c.classList.remove('active'));
-  document.getElementById('sort-' + s).classList.add('active');
-  // Reddit은 정렬이 서버사이드 - 다시 로드
-  if (s !== currentSort) {
-    allItems = allItems.filter(i => i.source !== 'reddit');
-    loadReddit();
+/* ── 좋아요 (user memes) ── */
+async function toggleMemeLike(memeId, btn) {
+  if (!currentUser) { showToast('로그인 후 좋아요를 누를 수 있어요'); return; }
+  const isLiked = btn.classList.contains('liked');
+  const item = allItems.find(i => i.dbId == memeId);
+  if (!item) return;
+  if (isLiked) {
+    await sb.from('meme_likes').delete().eq('user_id', currentUser.id).eq('meme_id', memeId);
+    await sb.from('memes').update({ likes: Math.max(0, item.likes - 1) }).eq('id', memeId);
+    item.likes = Math.max(0, item.likes - 1);
+  } else {
+    await sb.from('meme_likes').insert({ user_id: currentUser.id, meme_id: memeId });
+    await sb.from('memes').update({ likes: item.likes + 1 }).eq('id', memeId);
+    item.likes++;
   }
-  applyFilterSort();
+  btn.classList.toggle('liked');
+  btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="${!isLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${formatCount(item.likes)}`;
 }
 
-// ── 초기 로드 ──
-Promise.all([
-  loadReddit(),
-  loadYouTube(),
-  loadCurated(),
-]).then(() => {
-  if (allItems.length === 0) {
-    document.getElementById('feed-status').textContent = '콘텐츠를 불러오지 못했어요. 새로고침 해보세요.';
+async function deleteMeme(memeId) {
+  if (!confirm('삭제할까요?')) return;
+  const item = allItems.find(i => i.dbId == memeId);
+  if (item?.fileUrl) {
+    const path = item.fileUrl.split('/meme-uploads/')[1];
+    if (path) await sb.storage.from('meme-uploads').remove([path]);
   }
+  await sb.from('memes').delete().eq('id', memeId);
+  allItems = allItems.filter(i => i.dbId != memeId);
+  applyFilterSort();
+  showToast('삭제됐어요');
+}
+
+/* ── 업로드 모달 ── */
+function openUpload() {
+  if (!currentUser) { showToast('로그인 후 업로드할 수 있어요'); return; }
+  document.getElementById('upload-modal').classList.add('show');
+  resetUploadForm();
+}
+function closeUpload() { document.getElementById('upload-modal').classList.remove('show'); }
+
+function resetUploadForm() {
+  setUploadType('image');
+  selectedFile = null; linkThumbUrl = '';
+  document.getElementById('upload-title').value = '';
+  document.getElementById('link-input').value = '';
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('link-preview').style.display = 'none';
+  document.getElementById('upload-error').classList.remove('show');
+  document.getElementById('upload-progress').style.display = 'none';
+  document.getElementById('upload-progress-bar').style.width = '0%';
+  document.getElementById('file-input').value = '';
+}
+
+function setUploadType(type) {
+  uploadType = type;
+  ['image','video','youtube','reddit'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t === type);
+  });
+  const isFile = type === 'image' || type === 'video';
+  document.getElementById('file-upload-area').style.display = isFile ? '' : 'none';
+  document.getElementById('link-input-area').style.display = isFile ? 'none' : '';
+
+  const fileInput = document.getElementById('file-input');
+  const hint = document.getElementById('file-hint');
+  if (type === 'image') { fileInput.accept = 'image/*'; hint.textContent = 'JPG, PNG, GIF, WebP · 최대 10MB'; }
+  if (type === 'video') { fileInput.accept = 'video/*'; hint.textContent = 'MP4, MOV, WebM · 최대 50MB'; }
+
+  const placeholder = { youtube: 'https://www.youtube.com/watch?v=...', reddit: 'https://www.reddit.com/r/fencing/...' }[type] || '';
+  if (document.getElementById('link-input')) document.getElementById('link-input').placeholder = placeholder;
+
+  selectedFile = null;
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('link-preview').style.display = 'none';
+}
+
+// 파일 선택
+document.addEventListener('DOMContentLoaded', () => {
+  const fileInput = document.getElementById('file-input');
+  const dropZone = document.getElementById('drop-zone');
+
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    handleFile(e.dataTransfer.files[0]);
+  });
 });
+
+function handleFile(file) {
+  if (!file) return;
+  const maxSize = uploadType === 'video' ? 50*1024*1024 : 10*1024*1024;
+  if (file.size > maxSize) { showError(`파일이 너무 커요 (최대 ${uploadType === 'video' ? '50' : '10'}MB)`); return; }
+  selectedFile = file;
+  const wrap = document.getElementById('preview-wrap');
+  const img = document.getElementById('preview-img');
+  const vid = document.getElementById('preview-video');
+  wrap.style.display = '';
+  if (file.type.startsWith('image/')) {
+    img.src = URL.createObjectURL(file); img.style.display = ''; vid.style.display = 'none';
+  } else {
+    vid.src = URL.createObjectURL(file); vid.style.display = ''; img.style.display = 'none';
+  }
+  if (!document.getElementById('upload-title').value) {
+    document.getElementById('upload-title').value = file.name.replace(/\.[^.]+$/, '');
+  }
+}
+
+// 링크 입력
+async function onLinkInput() {
+  const url = document.getElementById('link-input').value.trim();
+  const preview = document.getElementById('link-preview');
+  const thumb = document.getElementById('link-thumb');
+  const info = document.getElementById('link-preview-info');
+  linkThumbUrl = '';
+
+  if (uploadType === 'youtube') {
+    const id = getYouTubeId(url);
+    if (id) {
+      linkThumbUrl = `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+      thumb.src = linkThumbUrl;
+      info.textContent = 'YouTube 영상';
+      preview.style.display = '';
+      if (!document.getElementById('upload-title').value) {
+        document.getElementById('upload-title').value = 'YouTube 영상';
+      }
+    } else { preview.style.display = 'none'; }
+  } else if (uploadType === 'reddit') {
+    const id = getRedditId(url);
+    if (id) {
+      try {
+        const res = await fetch(`https://www.reddit.com/${id}.json`);
+        const data = await res.json();
+        const post = data[0]?.data?.children?.[0]?.data;
+        if (post) {
+          const t = post.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&') || '';
+          if (t) { linkThumbUrl = t; thumb.src = t; preview.style.display = ''; }
+          info.textContent = 'r/' + (post.subreddit || 'fencing');
+          if (!document.getElementById('upload-title').value) {
+            document.getElementById('upload-title').value = post.title?.slice(0,80) || '';
+          }
+        }
+      } catch(e) { preview.style.display = 'none'; }
+    } else { preview.style.display = 'none'; }
+  }
+}
+
+// 업로드 제출
+async function submitUpload() {
+  if (!currentUser) return;
+  const title = document.getElementById('upload-title').value.trim();
+  const link = document.getElementById('link-input').value.trim();
+  if (!title) { showError('제목을 입력해주세요'); return; }
+
+  const isFile = uploadType === 'image' || uploadType === 'video';
+  if (isFile && !selectedFile) { showError('파일을 선택해주세요'); return; }
+  if (!isFile && !link) { showError('링크를 입력해주세요'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = '업로드 중...';
+  setProgress(10);
+
+  try {
+    let fileUrl = null, thumbnailUrl = linkThumbUrl || null;
+
+    if (isFile && selectedFile) {
+      const ext = selectedFile.name.split('.').pop();
+      const path = `${currentUser.id}/${Date.now()}.${ext}`;
+      setProgress(30);
+      const { data, error } = await sb.storage.from('meme-uploads').upload(path, selectedFile, { upsert: false });
+      if (error) throw error;
+      setProgress(70);
+      const { data: { publicUrl } } = sb.storage.from('meme-uploads').getPublicUrl(path);
+      fileUrl = publicUrl;
+      if (uploadType === 'image') thumbnailUrl = publicUrl;
+    }
+
+    setProgress(85);
+    const { error } = await sb.from('memes').insert({
+      author_id: currentUser.id,
+      type: uploadType,
+      title,
+      file_url: fileUrl,
+      link_url: isFile ? null : link,
+      thumbnail_url: thumbnailUrl,
+    });
+    if (error) throw error;
+
+    setProgress(100);
+    setTimeout(() => {
+      closeUpload();
+      showToast('업로드됐어요! 🎉');
+      allItems = allItems.filter(i => !i.id.startsWith('user-'));
+      loadUserMemes().then(() => applyFilterSort());
+    }, 400);
+  } catch(e) {
+    showError('업로드 실패: ' + (e.message || '다시 시도해주세요'));
+    btn.disabled = false; btn.textContent = '올리기';
+    setProgress(0);
+  }
+}
+
+function setProgress(v) {
+  document.getElementById('upload-progress').style.display = v > 0 ? '' : 'none';
+  document.getElementById('upload-progress-bar').style.width = v + '%';
+}
+function showError(msg) {
+  const el = document.getElementById('upload-error');
+  el.textContent = msg; el.classList.add('show');
+}
+
+/* ── Init ── */
+async function init() {
+  await initAuth();
+  await loadAll();
+}
+init();
 </script>
 </body>
 </html>
