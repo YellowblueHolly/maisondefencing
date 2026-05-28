@@ -762,9 +762,7 @@ function handleFile(file) {
   } else {
     vid.src = URL.createObjectURL(file); vid.style.display = ''; img.style.display = 'none';
   }
-  if (!document.getElementById('upload-title').value) {
-    document.getElementById('upload-title').value = file.name.replace(/\.[^.]+$/, '');
-  }
+  // 제목은 비워두고 사용자가 직접 입력하게 함
 }
 
 // 링크 입력
@@ -858,6 +856,7 @@ async function submitUpload() {
       const { data: { publicUrl } } = sb.storage.from('meme-uploads').getPublicUrl(path);
       fileUrl = publicUrl;
       if (uploadType === 'image') thumbnailUrl = publicUrl;
+    // 제목은 자동입력 안 함 - 사용자가 직접 입력
     }
 
     // 인스타 썸네일 이미지 별도 업로드
@@ -874,6 +873,7 @@ async function submitUpload() {
     }
 
     setProgress(85);
+    console.log('memes insert 시작:', { type: uploadType, title, link_url: isFile ? null : link, thumbnail_url: thumbnailUrl });
     const { error: insertError } = await sb.from('memes').insert({
       author_id: currentUser.id,
       type: uploadType,
@@ -883,11 +883,16 @@ async function submitUpload() {
       thumbnail_url: thumbnailUrl,
     });
     if (insertError) {
+      console.error('insert 오류:', insertError);
       if (insertError.message?.includes('memes_type_check')) {
-        throw new Error('인스타그램 타입 미지원 — Supabase SQL에서 constraint 업데이트 필요');
+        throw new Error('타입 제약 오류 — SQL에서 constraint 재설정 필요');
+      }
+      if (insertError.message?.includes('row-level security')) {
+        throw new Error('권한 오류 (RLS) — Supabase 정책을 확인해주세요');
       }
       throw insertError;
     }
+    console.log('insert 성공!');
 
     setProgress(100);
     setTimeout(async () => {
