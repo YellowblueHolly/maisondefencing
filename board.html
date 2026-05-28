@@ -367,9 +367,9 @@ function showToast(msg) {
 }
 function showView(name) {
   ['list','post','write'].forEach(v => {
-    document.getElementById('view-' + v).style.display = v === name ? '' : 'none';
+    document.getElementById('view-' + v).style.display = v === name ? 'block' : 'none';
   });
-  window.scrollTo({ top: 56, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ─── 인증 ─── */
