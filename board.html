@@ -166,12 +166,12 @@
   <div class="nav-inner">
     <a href="index.html" class="nav-logo">MAISON <em>de</em> FENCING</a>
     <div class="nav-links">
-      <a href="index.html">홈</a>
-      <a href="rules.html">규정 검색</a>
-      
+      <a href="index.html" >홈</a>
+      <a href="rules.html" >규정 검색</a>
       <a href="board.html" class="active">게시판</a>
-      <a href="sites.html">사이트 모음</a>
-      <a href="clubs.html">클럽 찾기</a>
+      <a href="feed.html" >펜싱 피드</a>
+      <a href="sites.html" >사이트 모음</a>
+      <a href="clubs.html" >클럽 찾기</a>
     </div>
     <div class="nav-auth" id="nav-auth">
       <button class="btn-sm" onclick="showAuth('login')">로그인</button>
@@ -471,26 +471,35 @@ async function submitAuth() {
       email, password,
       options: { data: { username } }
     });
-    if (error) {
-      showErr(error.message === 'User already registered' ? '이미 가입된 이메일이에요' : error.message);
+
+    const isRateLimit = error?.message === 'email rate limit exceeded';
+
+    if (error && !isRateLimit) {
+      const msg = {
+        'User already registered': '이미 가입된 이메일이에요',
+        'Password should be at least 6 characters': '비밀번호는 6자 이상이어야 해요',
+        'Unable to validate email address: invalid format': '이메일 형식이 올바르지 않아요',
+      }[error.message] || '가입 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.';
+      showErr(msg);
       btn.disabled = false; btn.textContent = '가입하기';
       return;
     }
 
-    // 성공 화면 — 모달 내부를 성공 UI로 교체
+    // 성공 (또는 rate limit — 계정은 생성됨)
+    const isAutoLogin = data?.session != null;
     const modal = document.querySelector('#auth-modal .modal');
-    const isAutoLogin = data?.session != null; // 이메일 인증 OFF면 바로 로그인
     modal.innerHTML = `
       <div style="padding:40px 32px;text-align:center">
         <div style="font-size:48px;margin-bottom:16px">${isAutoLogin ? '🎉' : '📧'}</div>
         <h2 style="font-family:var(--font-display);font-size:22px;font-weight:500;letter-spacing:1px;margin-bottom:10px">
           ${isAutoLogin ? '가입 완료!' : '가입 신청 완료!'}
         </h2>
-        <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px">
+        <p style="font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:24px">
           ${isAutoLogin
             ? `<strong style="color:var(--ink)">${escHtml(username)}</strong> 님, 환영해요 🤺<br>지금 바로 이용하실 수 있어요.`
-            : `<strong style="color:var(--ink)">${escHtml(email)}</strong>로<br>인증 메일을 보냈어요.<br>메일 확인 후 로그인해주세요.`
+            : `<strong style="color:var(--ink)">${escHtml(email)}</strong>로<br>인증 메일을 보냈어요.<br>메일함을 확인해주세요.`
           }
+          ${isRateLimit ? `<br><span style="font-size:12px;color:#B08000">메일이 도착하지 않으면 잠시 후 다시 시도해주세요</span>` : ''}
         </p>
         <button onclick="closeAuth()" style="width:100%;padding:11px;background:var(--ink);color:var(--cream);border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font-body)">
           ${isAutoLogin ? '시작하기' : '확인'}
