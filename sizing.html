@@ -22,6 +22,7 @@
     --negrini: #1A6B5A;
     --leonpaul: #1A4A7A;
     --fw: #8B5E00;
+    --gyejeol: #4A1A7A;
   }
   html { scroll-behavior: smooth; }
   body { font-family: var(--font-body); background: var(--cream); color: var(--ink); font-size: 14px; line-height: 1.6; }
@@ -57,6 +58,9 @@
   .brand-negrini { background: var(--teal-bg); color: var(--negrini); border: 1px solid var(--teal-light); }
   .brand-leonpaul { background: var(--blue-bg); color: var(--leonpaul); border: 1px solid var(--blue-light); }
   .brand-fw { background: var(--amber-bg); color: var(--fw); border: 1px solid var(--amber-light); }
+  .brand-gyejeol { background: #F0EAF8; color: var(--gyejeol); border: 1px solid #D4B8E8; }
+  td.gyejeol-size { color: var(--gyejeol); font-size: 15px; font-weight: 600; }
+  th.col-gyejeol { background: #F0EAF8; color: var(--gyejeol); }
 
   /* Controls */
   .controls { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
@@ -173,6 +177,7 @@
     <span class="brand-badge brand-negrini">● Negrini</span>
     <span class="brand-badge brand-leonpaul">● Leon Paul</span>
     <span class="brand-badge brand-fw">● FencingWarehouse</span>
+    <span class="brand-badge brand-gyejeol">● 펜싱의계절</span>
   </div>
 
   <!-- 컨트롤 -->
@@ -260,15 +265,15 @@ const DATA = {
       subtitle: '알스타 기준 · 가슴둘레 매핑',
       headers: ['알스타', '가슴(cm)', '허리(cm)', '키(cm)', '네그리니', '레온폴(Euro)', 'FW코리아'],
       rows: [
-        { allstar:44, chest:'84–88', waist:'72–76', height:'164–170', negrini:'42',   lp:'46',  fw:'44' },
-        { allstar:46, chest:'88–92', waist:'76–80', height:'164–170', negrini:'44',   lp:'48',  fw:'46' },
-        { allstar:48, chest:'92–96', waist:'80–84', height:'170–176', negrini:'46',   lp:'50',  fw:'48' },
-        { allstar:50, chest:'96–100', waist:'84–88', height:'170–176', negrini:'46–48', lp:'50', fw:'50' },
-        { allstar:52, chest:'100–104', waist:'88–92', height:'176–182', negrini:'48',  lp:'52',  fw:'52' },
-        { allstar:54, chest:'104–108', waist:'92–96', height:'176–182', negrini:'50',  lp:'54',  fw:'54' },
-        { allstar:56, chest:'108–112', waist:'96–100', height:'176–182', negrini:'52', lp:'56',  fw:'56' },
-        { allstar:58, chest:'112–116', waist:'100–104', height:'182–188', negrini:'54', lp:'58', fw:'58' },
-        { allstar:60, chest:'116–120', waist:'104–108', height:'182–188', negrini:'56', lp:'60', fw:'60' },
+        { allstar:44, chest:'84–88', waist:'72–76', height:'164–170', negrini:'42',   lp:'46', fw:'44', gy:'44' },
+        { allstar:46, chest:'88–92', waist:'76–80', height:'164–170', negrini:'44',   lp:'48', fw:'46', gy:'46' },
+        { allstar:48, chest:'92–96', waist:'80–84', height:'170–176', negrini:'46',   lp:'50', fw:'48', gy:'48' },
+        { allstar:50, chest:'96–100', waist:'84–88', height:'170–176', negrini:'46–48', lp:'50', fw:'50', gy:'50' },
+        { allstar:52, chest:'100–104', waist:'88–92', height:'176–182', negrini:'48', lp:'52', fw:'52', gy:'52' },
+        { allstar:54, chest:'104–108', waist:'92–96', height:'176–182', negrini:'50', lp:'54', fw:'54', gy:'54' },
+        { allstar:56, chest:'108–112', waist:'96–100', height:'176–182', negrini:'52', lp:'56', fw:'56', gy:'56' },
+        { allstar:58, chest:'112–116', waist:'100–104', height:'182–188', negrini:'54', lp:'58', fw:'58', gy:'58' },
+        { allstar:60, chest:'116–120', waist:'104–108', height:'182–188', negrini:'56', lp:'60', fw:'60', gy:'60' },
       ],
       note: '레온폴 Euro 사이즈 = UK/USA 사이즈 + 10 (예: UK 38 = Euro 48)',
       measureBy: 'chest',
@@ -278,14 +283,14 @@ const DATA = {
       subtitle: '알스타 기준 · 허리둘레 매핑',
       headers: ['알스타', '가슴(cm)', '허리(cm)', '키(cm)', '네그리니', '레온폴(Euro)', 'FW코리아'],
       rows: [
-        { allstar:44, chest:'84–88', waist:'72–76', height:'164–170', negrini:'42',   lp:'44', fw:'44' },
-        { allstar:46, chest:'88–92', waist:'76–80', height:'164–170', negrini:'44',   lp:'46', fw:'46' },
-        { allstar:48, chest:'92–96', waist:'80–84', height:'170–176', negrini:'46',   lp:'44', fw:'48' },
-        { allstar:50, chest:'96–100', waist:'84–88', height:'170–176', negrini:'46–48', lp:'46', fw:'50' },
-        { allstar:52, chest:'100–104', waist:'88–92', height:'176–182', negrini:'48', lp:'48', fw:'52' },
-        { allstar:54, chest:'104–108', waist:'92–96', height:'176–182', negrini:'50', lp:'50', fw:'54' },
-        { allstar:56, chest:'108–112', waist:'96–100', height:'176–182', negrini:'52', lp:'52', fw:'56' },
-        { allstar:58, chest:'112–116', waist:'100–104', height:'182–188', negrini:'54', lp:'—', fw:'58' },
+        { allstar:44, chest:'84–88', waist:'72–76', height:'164–170', negrini:'42',   lp:'44', fw:'44', gy:'44' },
+        { allstar:46, chest:'88–92', waist:'76–80', height:'164–170', negrini:'44',   lp:'46', fw:'46', gy:'46' },
+        { allstar:48, chest:'92–96', waist:'80–84', height:'170–176', negrini:'46',   lp:'44', fw:'48', gy:'48' },
+        { allstar:50, chest:'96–100', waist:'84–88', height:'170–176', negrini:'46–48', lp:'46', fw:'50', gy:'50' },
+        { allstar:52, chest:'100–104', waist:'88–92', height:'176–182', negrini:'48', lp:'48', fw:'52', gy:'52' },
+        { allstar:54, chest:'104–108', waist:'92–96', height:'176–182', negrini:'50', lp:'50', fw:'54', gy:'54' },
+        { allstar:56, chest:'108–112', waist:'96–100', height:'176–182', negrini:'52', lp:'52', fw:'56', gy:'56' },
+        { allstar:58, chest:'112–116', waist:'100–104', height:'182–188', negrini:'54', lp:'—', fw:'58', gy:'58' },
       ],
       note: '레온폴 브리치는 허리둘레 기준. UK/USA 사이즈로도 표기됨 (Euro = UK+10)',
       measureBy: 'waist',
@@ -297,14 +302,14 @@ const DATA = {
       subtitle: '알스타 기준 · 가슴둘레 매핑',
       headers: ['알스타', '가슴(cm)', '허리(cm)', '키(cm)', '네그리니', '레온폴(Euro)', 'FW코리아'],
       rows: [
-        { allstar:36, chest:'80–84', waist:'60–64', height:'164–170', negrini:'—',  lp:'38', fw:'36' },
-        { allstar:38, chest:'84–88', waist:'64–68', height:'164–170', negrini:'40', lp:'38–40', fw:'38' },
-        { allstar:40, chest:'88–92', waist:'68–72', height:'164–170', negrini:'42', lp:'40', fw:'40' },
-        { allstar:42, chest:'92–96', waist:'72–76', height:'164–170', negrini:'44', lp:'42', fw:'42' },
-        { allstar:44, chest:'96–100', waist:'76–80', height:'164–170', negrini:'46', lp:'44', fw:'44' },
-        { allstar:46, chest:'100–104', waist:'80–84', height:'164–170', negrini:'46–48', lp:'44', fw:'46' },
-        { allstar:48, chest:'104–108', waist:'84–88', height:'164–170', negrini:'48', lp:'46', fw:'48' },
-        { allstar:50, chest:'108–116', waist:'88–92', height:'164–170', negrini:'50', lp:'48', fw:'50' },
+        { allstar:36, chest:'80–84', waist:'60–64', height:'164–170', negrini:'—',  lp:'38', fw:'36', gy:'36' },
+        { allstar:38, chest:'84–88', waist:'64–68', height:'164–170', negrini:'40', lp:'38–40', fw:'38', gy:'38' },
+        { allstar:40, chest:'88–92', waist:'68–72', height:'164–170', negrini:'42', lp:'40', fw:'40', gy:'40' },
+        { allstar:42, chest:'92–96', waist:'72–76', height:'164–170', negrini:'44', lp:'42', fw:'42', gy:'42' },
+        { allstar:44, chest:'96–100', waist:'76–80', height:'164–170', negrini:'46', lp:'44', fw:'44', gy:'44' },
+        { allstar:46, chest:'100–104', waist:'80–84', height:'164–170', negrini:'46–48', lp:'44', fw:'46', gy:'46' },
+        { allstar:48, chest:'104–108', waist:'84–88', height:'164–170', negrini:'48', lp:'46', fw:'48', gy:'48' },
+        { allstar:50, chest:'108–116', waist:'88–92', height:'164–170', negrini:'50', lp:'48', fw:'50', gy:'50' },
       ],
       note: '네그리니 여성 사이즈는 40–50까지만 제공. 레온폴 여성 Euro는 남성과 체계가 다름.',
       measureBy: 'chest',
@@ -314,13 +319,13 @@ const DATA = {
       subtitle: '알스타 기준 · 허리둘레 매핑',
       headers: ['알스타', '가슴(cm)', '허리(cm)', '키(cm)', '네그리니', '레온폴(Euro)', 'FW코리아'],
       rows: [
-        { allstar:36, chest:'80–84', waist:'60–64', height:'164–170', negrini:'—',  lp:'36', fw:'36' },
-        { allstar:38, chest:'84–88', waist:'64–68', height:'164–170', negrini:'40', lp:'38', fw:'38' },
-        { allstar:40, chest:'88–92', waist:'68–72', height:'164–170', negrini:'40', lp:'40', fw:'40' },
-        { allstar:42, chest:'92–96', waist:'72–76', height:'164–170', negrini:'42', lp:'42', fw:'42' },
-        { allstar:44, chest:'96–100', waist:'76–80', height:'164–170', negrini:'44', lp:'44', fw:'44' },
-        { allstar:46, chest:'100–104', waist:'80–84', height:'164–170', negrini:'46', lp:'46', fw:'46' },
-        { allstar:48, chest:'104–108', waist:'84–88', height:'164–170', negrini:'48', lp:'48', fw:'48' },
+        { allstar:36, chest:'80–84', waist:'60–64', height:'164–170', negrini:'—',  lp:'36', fw:'36', gy:'36' },
+        { allstar:38, chest:'84–88', waist:'64–68', height:'164–170', negrini:'40', lp:'38', fw:'38', gy:'38' },
+        { allstar:40, chest:'88–92', waist:'68–72', height:'164–170', negrini:'40', lp:'40', fw:'40', gy:'40' },
+        { allstar:42, chest:'92–96', waist:'72–76', height:'164–170', negrini:'42', lp:'42', fw:'42', gy:'42' },
+        { allstar:44, chest:'96–100', waist:'76–80', height:'164–170', negrini:'44', lp:'44', fw:'44', gy:'44' },
+        { allstar:46, chest:'100–104', waist:'80–84', height:'164–170', negrini:'46', lp:'46', fw:'46', gy:'46' },
+        { allstar:48, chest:'104–108', waist:'84–88', height:'164–170', negrini:'48', lp:'48', fw:'48', gy:'48' },
       ],
       note: '여성 하의는 허리둘레 기준으로 맞추는 것이 가장 정확합니다.',
       measureBy: 'waist',
@@ -547,6 +552,7 @@ function render() {
         <th class="col-negrini">Negrini</th>
         <th class="col-leonpaul">Leon Paul<br><small>(Euro)</small></th>
         <th class="col-fw">FW 코리아</th>
+        <th class="col-gyejeol">펜싱의계절</th>
       </tr>
     </thead>
     <tbody>
@@ -559,6 +565,7 @@ function render() {
           <td class="negrini-size">${r.negrini}</td>
           <td class="leonpaul-size">${r.lp}</td>
           <td class="fw-size">${r.fw}</td>
+          <td class="gyejeol-size">${r.gy}</td>
         </tr>`).join('')}
     </tbody>`;
 
@@ -653,6 +660,10 @@ function findSize() {
       <div class="result-item">
         <span class="brand-badge brand-fw">FW 코리아</span>
         <span style="font-size:18px;font-weight:600;color:var(--fw)">${best.fw}</span>
+      </div>
+      <div class="result-item">
+        <span class="brand-badge brand-gyejeol">펜싱의계절</span>
+        <span style="font-size:18px;font-weight:600;color:var(--gyejeol)">${best.gy}</span>
       </div>
     </div>
     <div style="margin-top:8px;font-size:11px;color:var(--muted)">신체치수 범위: 가슴 ${best.chest} · 허리 ${best.waist} · 키 ${best.height}</div>`;
