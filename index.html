@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>메종드펜싱 — Maison de Fencing</title>
+<title>메종드펜싱 — 펜싱을 좋아하는 사람들의 모임</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -515,7 +515,7 @@
   <div class="hero-inner">
     <div class="hero-left">
       <h1>MAISON<br><em>de</em><br>FENCING</h1>
-      <p class="hero-sub">규정 · 밈 · 클럽 · 커뮤니티</p>
+      <p class="hero-sub">펜싱을 좋아하는 사람들의 모임</p>
     </div>
     <div class="hero-stats">
       <div class="stat">
@@ -703,8 +703,8 @@ async function loadMemes() {
   const grid = document.getElementById('meme-grid');
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;font-size:12px;color:var(--muted)">로딩 중...</div>';
   try {
-    const res = await fetch('https://www.reddit.com/r/fencing/top.json?limit=30&t=week', {
-      headers: { 'Accept': 'application/json' }
+    const res = await fetch(`https://www.reddit.com/r/fencing/top.json?limit=30&t=week&_=${Date.now()}`, {
+      cache: 'no-store'
     });
     const data = await res.json();
     const posts = data.data.children.map(c => c.data)
@@ -721,13 +721,13 @@ async function loadMemes() {
       const thumb = p.preview?.images?.[0]?.resolutions?.[1]?.url?.replace(/&amp;/g,'&')
                  || p.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&')
                  || '';
-      const thumbHtml = thumb
-        ? `<img src="${esc(thumb)}" alt="${esc(p.title)}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\\"display:flex;align-items:center;justify-content:center;height:100%;font-size:36px\\">🤺</div>'">`
-        : '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:36px">🤺</div>';
       return `
         <a href="https://reddit.com${esc(p.permalink)}" target="_blank" rel="noopener" class="meme-card">
           <div class="meme-thumb">
-            ${thumbHtml}
+            ${thumb
+              ? `<img src="${esc(thumb)}" alt="${esc(p.title)}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+              : ''}
+            <div style="display:${thumb ? 'none' : 'flex'};align-items:center;justify-content:center;height:100%;font-size:36px">🤺</div>
             <span class="meme-source-badge badge-reddit">Reddit</span>
           </div>
           <div class="meme-meta">
@@ -749,7 +749,7 @@ async function loadPosts() {
   const list = document.getElementById('post-list');
   const { data: posts } = await sb
     .from('posts')
-    .select('id, title, created_at, likes, profiles(username)')
+    .select('id, title, created_at, likes')
     .order('created_at', { ascending: false })
     .limit(5);
 
