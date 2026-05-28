@@ -531,7 +531,7 @@ async function loadPosts() {
   try {
     const { data: posts, error, count } = await sb
       .from('posts')
-      .select('id, title, created_at, views, likes, author_id, profiles!posts_author_id_fkey(username)', { count: 'exact' })
+      .select('id, title, content, created_at, views, likes, author_id', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to);
 
@@ -544,17 +544,17 @@ async function loadPosts() {
       return;
     }
 
+    // 작성자 username 별도 조회
+    const authorIds = [...new Set(posts.map(p => p.author_id))];
+    const { data: profiles } = await sb.from('profiles').select('id, username').in('id', authorIds);
+    const profileMap = {};
+    (profiles || []).forEach(p => { profileMap[p.id] = p.username; });
+
     // 댓글 수 별도 조회
     const postIds = posts.map(p => p.id);
-    const { data: commentCounts } = await sb
-      .from('comments')
-      .select('post_id')
-      .in('post_id', postIds);
-
+    const { data: commentCounts } = await sb.from('comments').select('post_id').in('post_id', postIds);
     const countMap = {};
-    (commentCounts || []).forEach(c => {
-      countMap[c.post_id] = (countMap[c.post_id] || 0) + 1;
-    });
+    (commentCounts || []).forEach(c => { countMap[c.post_id] = (countMap[c.post_id] || 0) + 1; });
 
     const isNew = d => (Date.now() - new Date(d)) < 86400000;
 
@@ -564,7 +564,7 @@ async function loadPosts() {
           <span class="post-title-text">${escHtml(p.title)}</span>
           ${isNew(p.created_at) ? '<span class="new-badge">NEW</span>' : ''}
         </div>
-        <div class="post-author">${escHtml(p.profiles?.username || '알수없음')}</div>
+        <div class="post-author">${escHtml(profileMap[p.author_id] || '알수없음')}</div>
         <div class="post-stat">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           ${p.views || 0}
@@ -631,16 +631,20 @@ async function loadPost(id) {
   await sb.rpc('increment_views', { post_id: id });
 
   const { data: post } = await sb.from('posts')
-    .select('*, profiles!posts_author_id_fkey(username)')
+    .select('*')
     .eq('id', id)
     .single();
 
   if (!post) { showToast('글을 불러오지 못했어요'); goList(); return; }
+
+  // 작성자 username 조회
+  const { data: author } = await sb.from('profiles').select('username').eq('id', post.author_id).single();
+  post._username = author?.username || '알수없음';
   currentPost = post;
 
   document.getElementById('detail-title').textContent  = post.title;
   document.getElementById('detail-body').textContent   = post.content;
-  document.getElementById('detail-author').textContent = post.profiles?.username || '알수없음';
+  document.getElementById('detail-author').textContent = post._username;
   document.getElementById('detail-date').textContent   = timeAgo(post.created_at);
   document.getElementById('detail-views').textContent  = `조회 ${post.views || 0}`;
   document.getElementById('like-count').textContent    = post.likes || 0;
@@ -667,16 +671,24 @@ async function loadPost(id) {
 }
 
 async function loadComments(postId) {
-  const { data } = await sb.from('comments')
-    .select('*, profiles!comments_author_id_fkey(username)')
+  const { data: comments } = await sb.from('comments')
+    .select('id, content, created_at, author_id')
     .eq('post_id', postId)
     .order('created_at', { ascending: true });
 
-  document.getElementById('comments-title').textContent = `댓글 ${data?.length || 0}`;
-  document.getElementById('comment-list').innerHTML = (data||[]).map(c => `
+  // 작성자 username 일괄 조회
+  const authorIds = [...new Set((comments||[]).map(c => c.author_id))];
+  const profileMap = {};
+  if (authorIds.length) {
+    const { data: profiles } = await sb.from('profiles').select('id, username').in('id', authorIds);
+    (profiles||[]).forEach(p => { profileMap[p.id] = p.username; });
+  }
+
+  document.getElementById('comments-title').textContent = `댓글 ${comments?.length || 0}`;
+  document.getElementById('comment-list').innerHTML = (comments||[]).map(c => `
     <div class="comment-item" id="c-${c.id}">
       <div class="comment-header">
-        <span class="comment-author">${escHtml(c.profiles?.username || '알수없음')}</span>
+        <span class="comment-author">${escHtml(profileMap[c.author_id] || '알수없음')}</span>
         <span style="display:flex;align-items:center;gap:6px">
           <span class="comment-date">${timeAgo(c.created_at)}</span>
           ${currentUser?.id === c.author_id ? `<button class="comment-del" onclick="deleteComment(${c.id})">삭제</button>` : ''}
@@ -728,12 +740,16 @@ async function toggleLike() {
 
 /* ─── 글쓰기 / 수정 ─── */
 function goWrite() {
-  if (!currentUser) { showAuth('login'); return; }
+  if (!currentUser) {
+    showAuth('login');
+    return;
+  }
   editingPostId = null;
   document.getElementById('write-title').textContent = '새 글 작성';
   document.getElementById('input-title').value = '';
   document.getElementById('input-body').value = '';
   showView('write');
+  window.scrollTo({ top: 0 });
 }
 
 function editPost() {
