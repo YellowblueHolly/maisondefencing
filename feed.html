@@ -410,11 +410,17 @@ const YT_HANDLES = [
 const YT_ID_CACHE_KEY = 'mdf_yt_ids_v2';
 
 async function resolveChannelId(handle) {
-  const url = `https://www.googleapis.com/youtube/v3/channels?part=id,snippet&forHandle=${handle}&key=${YT_API_KEY}`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.items?.[0]?.id || null;
+  try {
+    const encoded = encodeURIComponent(handle);
+    const url = `https://www.googleapis.com/youtube/v3/channels?part=id,snippet&forHandle=${encoded}&key=${YT_API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.items?.[0]?.id || null;
+  } catch(e) {
+    console.warn(`채널 해석 실패: ${handle}`, e);
+    return null;
+  }
 }
 
 async function loadYouTube() {
@@ -429,6 +435,7 @@ async function loadYouTube() {
       if (!idCache[ch.handle]) {
         const id = await resolveChannelId(ch.handle);
         if (id) { idCache[ch.handle] = id; }
+        else { console.warn(`채널 ID 없음: @${ch.handle}`); continue; }
       }
       const channelId = idCache[ch.handle];
       if (!channelId) continue;
@@ -883,15 +890,25 @@ async function submitUpload() {
     }
 
     setProgress(100);
-    setTimeout(() => {
-      closeUpload();
-      showToast('업로드됐어요! 🎉');
-      allItems = allItems.filter(i => !i.id.startsWith('user-'));
-      loadUserMemes().then(() => applyFilterSort());
+    setTimeout(async () => {
+      try {
+        closeUpload();
+        showToast('업로드됐어요! 🎉');
+        allItems = allItems.filter(i => !i.id.startsWith('user-'));
+        await loadUserMemes();
+        applyFilterSort();
+      } catch(innerErr) {
+        console.error('업로드 후 오류:', innerErr);
+        closeUpload();
+        showToast('업로드됐어요! (피드 새로고침 필요)');
+      }
     }, 400);
   } catch(e) {
-    showError('업로드 실패: ' + (e.message || '다시 시도해주세요'));
-    btn.disabled = false; btn.textContent = '올리기';
+    console.error('업로드 오류:', e);
+    const msg = e.message || '알 수 없는 오류';
+    showError('업로드 실패: ' + msg);
+    btn.disabled = false;
+    btn.textContent = '올리기';
     setProgress(0);
   }
 }
