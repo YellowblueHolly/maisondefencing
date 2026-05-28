@@ -196,6 +196,9 @@
     <button class="chip" id="chip-reddit" onclick="setFilter('reddit')">
       <span class="chip-dot dot-reddit"></span> Reddit
     </button>
+    <button class="chip" id="chip-youtube" onclick="setFilter('youtube')">
+      <span class="chip-dot" style="background:var(--youtube)"></span> YouTube
+    </button>
     <button class="chip" id="chip-user" onclick="setFilter('user')">
       <span class="chip-dot dot-user"></span> 회원 업로드
     </button>
@@ -357,10 +360,82 @@ function showAuthPrompt() { location.href = 'board.html'; }
 async function logout() { await sb.auth.signOut(); showToast('로그아웃 됐어요'); }
 
 /* ── 피드 로드 ── */
+
+// YouTube 설정
+const YT_API_KEY = 'AIzaSyCyaXGc37NukjVWkYf3xk67VWvKtikCQD0';
+const YT_HANDLES = [
+  { handle: 'SlicerSabre',           name: 'SlicerSabre' },
+  { handle: 'FIEvideo',              name: 'FIE Fencing' },
+  { handle: 'Fencing4everyone',      name: 'Fencing4everyone' },
+  { handle: 'Epeebyviratkhandelwal', name: 'Epee by Virat' },
+  { handle: '_sixtyfour',            name: 'sixtyfour' },
+  { handle: 'fencingtuna',           name: 'FencingTuna' },
+  { handle: 'fencingnut',            name: 'FencingNut' },
+  { handle: 'untouche',              name: 'Untouche' },
+  { handle: 'fencingcomedyclub',     name: 'FencingComedyClub' },
+];
+const YT_ID_CACHE_KEY = 'mdf_yt_ids_v1';
+
+async function resolveChannelId(handle) {
+  const url = `https://www.googleapis.com/youtube/v3/channels?part=id,snippet&forHandle=${handle}&key=${YT_API_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.items?.[0]?.id || null;
+}
+
+async function loadYouTube() {
+  // 캐시에서 채널 ID 로드
+  let idCache = {};
+  try { idCache = JSON.parse(localStorage.getItem(YT_ID_CACHE_KEY) || '{}'); } catch(e) {}
+
+  const items = [];
+  for (const ch of YT_HANDLES) {
+    try {
+      // 채널 ID 없으면 API로 조회
+      if (!idCache[ch.handle]) {
+        const id = await resolveChannelId(ch.handle);
+        if (id) { idCache[ch.handle] = id; }
+      }
+      const channelId = idCache[ch.handle];
+      if (!channelId) continue;
+
+      // 최신 영상 가져오기
+      const url = `https://www.googleapis.com/youtube/v3/search?channelId=${channelId}&part=snippet&order=date&maxResults=6&type=video&key=${YT_API_KEY}`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+
+      (data.items || []).forEach(item => {
+        items.push({
+          id: 'yt-' + item.id.videoId,
+          source: 'youtube',
+          type: 'youtube',
+          title: item.snippet.title,
+          thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
+          url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+          author: ch.name,
+          likes: null,
+          date: item.snippet.publishedAt,
+        });
+      });
+    } catch(e) {
+      console.warn(`YouTube ${ch.handle} 로드 실패:`, e);
+    }
+  }
+
+  // 캐시 저장
+  try { localStorage.setItem(YT_ID_CACHE_KEY, JSON.stringify(idCache)); } catch(e) {}
+
+  allItems = allItems.filter(i => !i.id.startsWith('yt-'));
+  allItems.push(...items);
+  console.log(`YouTube: ${items.length}개 영상 로드됨`);
+}
+
 async function loadAll() {
   document.getElementById('feed-status').textContent = '피드 로딩 중...';
   document.getElementById('masonry').innerHTML = '';
-  await Promise.all([loadReddit(), loadUserMemes()]);
+  await Promise.all([loadReddit(), loadUserMemes(), loadYouTube()]);
   applyFilterSort();
 }
 
@@ -420,8 +495,9 @@ async function loadUserMemes() {
 /* ── 필터/정렬 ── */
 function applyFilterSort() {
   let items = [...allItems];
-  if (currentFilter === 'reddit') items = items.filter(i => i.source === 'reddit');
-  if (currentFilter === 'user')   items = items.filter(i => i.source === 'user');
+  if (currentFilter === 'reddit')  items = items.filter(i => i.source === 'reddit');
+  if (currentFilter === 'youtube') items = items.filter(i => i.source === 'youtube');
+  if (currentFilter === 'user')    items = items.filter(i => i.source === 'user');
   if (currentSort === 'top') items.sort((a,b) => (b.likes||0) - (a.likes||0));
   else items.sort((a,b) => new Date(b.date) - new Date(a.date));
   filteredItems = items;
@@ -431,7 +507,7 @@ function applyFilterSort() {
 
 function setFilter(f) {
   currentFilter = f;
-  ['all','reddit','user'].forEach(k => document.getElementById('chip-'+k)?.classList.remove('active'));
+  ['all','reddit','youtube','user'].forEach(k => document.getElementById('chip-'+k)?.classList.remove('active'));
   document.getElementById('chip-'+f).classList.add('active');
   applyFilterSort();
 }
