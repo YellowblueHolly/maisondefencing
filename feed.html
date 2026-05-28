@@ -669,7 +669,7 @@ function setUploadType(type) {
   });
   const isFile = type === 'image' || type === 'video';
   document.getElementById('file-upload-area').style.display = isFile ? '' : 'none';
-  document.getElementById('link-input-area').style.display = isFile ? 'none' : '';
+  document.getElementById('link-input-area').style.display = isFile ? 'none' : 'block';
 
   const fileInput = document.getElementById('file-input');
   const hint = document.getElementById('file-hint');
