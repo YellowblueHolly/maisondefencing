@@ -188,7 +188,7 @@
   <div class="sidebar">
     <div class="sidebar-top">
       <h2>전국 펜싱클럽</h2>
-      <p id="sidebar-desc">2024년 기준 · 펜싱여지도 데이터</p>
+      <p id="sidebar-desc">2026년 5월 기준 · 펜싱여지도 데이터</p>
     </div>
 
     <div class="filter-wrap">
@@ -487,7 +487,7 @@ async function geocodeAll() {
   // 캐시 저장
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch(e) {}
 
-  document.getElementById('sidebar-desc').textContent = '2024년 기준 · 펜싱여지도 데이터';
+  document.getElementById('sidebar-desc').textContent = '2026년 5월 기준 · 펜싱여지도 데이터';
   applyFilter();
   updateMarkers();
 }

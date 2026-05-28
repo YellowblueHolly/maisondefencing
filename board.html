@@ -528,44 +528,60 @@ async function loadPosts() {
   const from = (currentPage - 1) * PAGE_SIZE;
   const to   = from + PAGE_SIZE - 1;
 
-  const { data: posts, error, count } = await sb
-    .from('posts')
-    .select(`*, profiles(username), comments(count)`, { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range(from, to);
+  try {
+    const { data: posts, error, count } = await sb
+      .from('posts')
+      .select('id, title, created_at, views, likes, author_id, profiles(username)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
-  if (error || !posts) { body.innerHTML = '<div class="loading">오류가 발생했어요</div>'; return; }
+    if (error) throw error;
+    if (!posts || posts.length === 0) {
+      body.innerHTML = `<div class="empty-board">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg>
+        <p>아직 게시글이 없어요.<br>첫 번째 글을 작성해보세요!</p>
+      </div>`;
+      return;
+    }
 
-  if (posts.length === 0) {
-    body.innerHTML = `<div class="empty-board">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg>
-      <p>아직 게시글이 없어요.<br>첫 번째 글을 작성해보세요!</p>
-    </div>`;
-    return;
+    // 댓글 수 별도 조회
+    const postIds = posts.map(p => p.id);
+    const { data: commentCounts } = await sb
+      .from('comments')
+      .select('post_id')
+      .in('post_id', postIds);
+
+    const countMap = {};
+    (commentCounts || []).forEach(c => {
+      countMap[c.post_id] = (countMap[c.post_id] || 0) + 1;
+    });
+
+    const isNew = d => (Date.now() - new Date(d)) < 86400000;
+
+    body.innerHTML = posts.map(p => `
+      <div class="post-row" onclick="loadPost(${p.id})">
+        <div class="post-title">
+          <span class="post-title-text">${escHtml(p.title)}</span>
+          ${isNew(p.created_at) ? '<span class="new-badge">NEW</span>' : ''}
+        </div>
+        <div class="post-author">${escHtml(p.profiles?.username || '알수없음')}</div>
+        <div class="post-stat">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          ${p.views || 0}
+        </div>
+        <div class="post-stat">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          ${countMap[p.id] || 0}
+        </div>
+      </div>`).join('');
+
+    renderPagination(count);
+    loadPopular();
+
+  } catch(e) {
+    console.error('게시판 오류:', e);
+    body.innerHTML = `<div class="loading">오류가 발생했어요 (${e.message || '알 수 없는 오류'})</div>`;
   }
-
-  const isNew = (d) => (Date.now() - new Date(d)) < 3600 * 24 * 1000;
-
-  body.innerHTML = posts.map(p => `
-    <div class="post-row" onclick="loadPost(${p.id})">
-      <div class="post-title">
-        <span class="post-title-text">${escHtml(p.title)}</span>
-        ${isNew(p.created_at) ? '<span class="new-badge">NEW</span>' : ''}
-      </div>
-      <div class="post-author">${escHtml(p.profiles?.username || '알수없음')}</div>
-      <div class="post-stat">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        ${p.views || 0}
-      </div>
-      <div class="post-stat">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        ${p.comments?.[0]?.count || 0}
-      </div>
-    </div>`).join('');
-
-  // 페이지네이션
-  renderPagination(count);
-  loadPopular();
 }
 
 function renderPagination(total) {
