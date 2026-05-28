@@ -11,7 +11,7 @@
   const KAKAO_APP_KEY = '8f26432a2cbd83671d57914e6ba15e42';
   if (KAKAO_APP_KEY !== 'YOUR_KAKAO_APP_KEY') {
     const s = document.createElement('script');
-    s.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_APP_KEY}&autoload=false&libraries=clusterer`;
+    s.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_APP_KEY}&autoload=false&libraries=clusterer,services`;
     document.head.appendChild(s);
   }
 </script>
@@ -433,6 +433,62 @@ function initMap() {
     }],
   });
 
+  geocodeAll();
+}
+
+// ── 지오코딩 (주소 → 좌표 자동 변환) ──
+const CACHE_KEY = 'mdf_geocode_v2';
+
+async function geocodeAll() {
+  // 캐시 확인
+  let cache = {};
+  try { cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); } catch(e) {}
+
+  const geocoder = new kakao.maps.services.Geocoder();
+  const needsGeocode = allClubs.filter(c => !cache[c.id]);
+
+  if (needsGeocode.length === 0) {
+    // 전부 캐시에 있음
+    allClubs.forEach(c => { if (cache[c.id]) { c.lat = cache[c.id].lat; c.lng = cache[c.id].lng; } });
+    applyFilter();
+    updateMarkers();
+    return;
+  }
+
+  // 진행 상황 표시
+  document.getElementById('sidebar-desc').textContent = `좌표 변환 중... (0/${needsGeocode.length})`;
+
+  let done = 0;
+  const DELAY = 100; // ms between requests (rate limit 방지)
+
+  for (const club of needsGeocode) {
+    await new Promise(resolve => {
+      setTimeout(() => {
+        geocoder.addressSearch(club.address, (result, status) => {
+          if (status === kakao.maps.services.Status.OK && result[0]) {
+            const lat = parseFloat(result[0].y);
+            const lng = parseFloat(result[0].x);
+            club.lat = lat;
+            club.lng = lng;
+            cache[club.id] = { lat, lng };
+          }
+          done++;
+          document.getElementById('sidebar-desc').textContent =
+            `좌표 변환 중... (${done}/${needsGeocode.length})`;
+          resolve();
+        });
+      }, done * DELAY);
+    });
+  }
+
+  // 캐시에 이미 있는 것도 적용
+  allClubs.forEach(c => { if (cache[c.id]) { c.lat = cache[c.id].lat; c.lng = cache[c.id].lng; } });
+
+  // 캐시 저장
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch(e) {}
+
+  document.getElementById('sidebar-desc').textContent = '2024년 기준 · 펜싱여지도 데이터';
+  applyFilter();
   updateMarkers();
 }
 
