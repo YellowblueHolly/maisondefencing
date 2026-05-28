@@ -531,7 +531,7 @@ async function loadPosts() {
   try {
     const { data: posts, error, count } = await sb
       .from('posts')
-      .select('id, title, created_at, views, likes, author_id, profiles(username)', { count: 'exact' })
+      .select('id, title, created_at, views, likes, author_id, profiles!posts_author_id_fkey(username)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to);
 
@@ -631,7 +631,7 @@ async function loadPost(id) {
   await sb.rpc('increment_views', { post_id: id });
 
   const { data: post } = await sb.from('posts')
-    .select('*, profiles(username)')
+    .select('*, profiles!posts_author_id_fkey(username)')
     .eq('id', id)
     .single();
 
@@ -668,7 +668,7 @@ async function loadPost(id) {
 
 async function loadComments(postId) {
   const { data } = await sb.from('comments')
-    .select('*, profiles(username)')
+    .select('*, profiles!comments_author_id_fkey(username)')
     .eq('post_id', postId)
     .order('created_at', { ascending: true });
 
