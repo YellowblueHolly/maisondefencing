@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>클럽 찾기 — 메종드펜싱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<!-- 카카오맵 SDK: KAKAO_API_KEY 를 본인 키로 교체 -->
+<script>
+  const KAKAO_APP_KEY = 'YOUR_KAKAO_APP_KEY'; // ← 여기에 키 입력
+  if (KAKAO_APP_KEY !== 'YOUR_KAKAO_APP_KEY') {
+    const s = document.createElement('script');
+    s.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_APP_KEY}&autoload=false&libraries=clusterer`;
+    document.head.appendChild(s);
+  }
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream: #F5F2EC; --paper: #FDFBF7; --ink: #1C1A17;
+    --muted: #6B6760; --faint: #E8E4DC;
+    --border: rgba(28,26,23,0.1); --border-strong: rgba(28,26,23,0.2);
+    --red: #C0392B; --red-bg: #FAF0EE; --red-border: #E8C4BE;
+    --teal: #1A6B5A; --teal-bg: #E8F4F0; --teal-border: #B0D8CF;
+    --blue: #1A4A7A; --blue-bg: #EAF0F8; --blue-border: #B0C8E8;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Noto Sans KR', sans-serif;
+  }
+  html, body { height: 100%; }
+  body { font-family: var(--font-body); background: var(--cream); color: var(--ink); font-size: 14px; }
+  a { text-decoration: none; color: inherit; }
+
+  /* Nav */
+  .nav { background: var(--paper); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 200; }
+  .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; height: 56px; display: flex; align-items: center; }
+  .nav-logo { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: 2px; margin-right: 36px; }
+  .nav-logo em { color: var(--red); font-style: normal; }
+  .nav-links { display: flex; gap: 2px; }
+  .nav-links a { font-size: 13px; color: var(--muted); padding: 5px 11px; border-radius: 6px; transition: all .15s; }
+  .nav-links a:hover { background: var(--cream); color: var(--ink); }
+  .nav-links a.active { background: var(--cream); color: var(--ink); font-weight: 500; }
+
+  /* Layout: sidebar + map */
+  .layout { display: flex; height: calc(100vh - 56px); }
+
+  /* Left sidebar */
+  .sidebar {
+    width: 380px;
+    flex-shrink: 0;
+    background: var(--paper);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Sidebar header */
+  .sidebar-top { padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .sidebar-top h2 { font-family: var(--font-display); font-size: 20px; font-weight: 500; letter-spacing: 1px; }
+  .sidebar-top p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* Search + filters */
+  .filter-wrap { padding: 12px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+  .search-box { display: flex; align-items: center; gap: 8px; padding: 0 12px; height: 38px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--cream); }
+  .search-box input { flex: 1; border: none; background: transparent; font-family: var(--font-body); font-size: 13px; color: var(--ink); outline: none; }
+  .search-box input::placeholder { color: var(--muted); }
+  .search-box svg { opacity: 0.35; flex-shrink: 0; }
+
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); cursor: pointer; background: transparent; font-family: var(--font-body); transition: all .15s; }
+  .chip:hover { border-color: var(--ink); color: var(--ink); }
+  .chip.active { color: #fff; border-color: transparent; }
+  .chip-epee.active   { background: var(--teal); }
+  .chip-foil.active   { background: var(--blue); }
+  .chip-sabre.active  { background: var(--red); }
+  .chip-region.active { background: var(--ink); }
+
+  /* Club list */
+  .club-list { flex: 1; overflow-y: auto; }
+  .club-list::-webkit-scrollbar { width: 4px; }
+  .club-list::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+
+  .region-header {
+    padding: 8px 20px 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+
+  .club-item {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .12s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .club-item:hover { background: var(--cream); }
+  .club-item.selected { background: #EFF4FC; border-left: 3px solid var(--blue); padding-left: 17px; }
+  .club-num { font-size: 11px; color: var(--muted); min-width: 22px; text-align: right; padding-top: 2px; }
+  .club-info { flex: 1; }
+  .club-name { font-size: 13px; font-weight: 500; }
+  .club-addr { font-size: 11px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 3px; }
+  .club-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+  .weapon-tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+  .tag-epee  { background: var(--teal-bg); color: var(--teal); }
+  .tag-foil  { background: var(--blue-bg); color: var(--blue); }
+  .tag-sabre { background: var(--red-bg);  color: var(--red); }
+
+  .empty-state { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px; }
+
+  /* Stats bar */
+  .stats-bar { padding: 8px 20px; border-top: 1px solid var(--border); flex-shrink: 0; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+  .stats-bar strong { color: var(--ink); }
+  .view-toggle { display: flex; gap: 4px; }
+  .view-btn { padding: 3px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--muted); cursor: pointer; font-family: var(--font-body); transition: all .15s; }
+  .view-btn.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+
+  /* Map */
+  .map-area { flex: 1; position: relative; background: var(--faint); }
+  #map { width: 100%; height: 100%; }
+
+  /* No map fallback */
+  .map-placeholder {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; text-align: center; padding: 40px;
+  }
+  .map-placeholder svg { opacity: 0.2; }
+  .map-placeholder h3 { font-family: var(--font-display); font-size: 22px; font-weight: 400; }
+  .map-placeholder p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .map-placeholder code { font-size: 12px; background: var(--faint); padding: 2px 8px; border-radius: 4px; }
+
+  /* Club detail popup (map overlay) */
+  .club-popup {
+    position: absolute;
+    bottom: 32px; left: 50%; transform: translateX(-50%);
+    background: var(--paper);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 16px 20px;
+    min-width: 280px;
+    max-width: 360px;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 4px 24px rgba(28,26,23,0.12);
+  }
+  .club-popup.show { display: block; }
+  .popup-close { position: absolute; top: 10px; right: 12px; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; }
+  .popup-name { font-size: 15px; font-weight: 500; padding-right: 20px; }
+  .popup-addr { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .popup-tags { display: flex; gap: 5px; margin-top: 8px; }
+  .popup-note { font-size: 12px; color: var(--teal); margin-top: 6px; font-style: italic; }
+  .popup-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .popup-btn { flex: 1; padding: 7px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-strong); background: transparent; color: var(--muted); cursor: pointer; font-family: var(--font-body); transition: all .15s; text-align: center; }
+  .popup-btn:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+  .popup-btn.primary { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">MAISON <em>de</em> FENCING</a>
+    <div class="nav-links">
+      <a href="index.html">홈</a>
+      <a href="rules.html">규정 검색</a>
+      <a href="talk.html">펜싱톡</a>
+      <a href="board.html">게시판</a>
+      <a href="sites.html">사이트 모음</a>
+      <a href="clubs.html" class="active">클럽 찾기</a>
+    </div>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- Left sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-top">
+      <h2>전국 펜싱클럽</h2>
+      <p id="sidebar-desc">2024년 기준 · 펜싱여지도 데이터</p>
+    </div>
+
+    <div class="filter-wrap">
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="search" placeholder="클럽명, 지역, 종목으로 검색...">
+      </div>
+      <div class="filter-row">
+        <span style="font-size:11px;color:var(--muted);align-self:center">종목</span>
+        <button class="chip chip-epee" id="chip-epee" onclick="toggleWeapon('에페')">에페</button>
+        <button class="chip chip-foil" id="chip-foil" onclick="toggleWeapon('플뢰레')">플뢰레</button>
+        <button class="chip chip-sabre" id="chip-sabre" onclick="toggleWeapon('사브르')">사브르</button>
+      </div>
+      <div class="filter-row" id="region-chips">
+        <span style="font-size:11px;color:var(--muted);align-self:center">지역</span>
+        <!-- JS로 채움 -->
+      </div>
+    </div>
+
+    <div class="club-list" id="club-list"></div>
+
+    <div class="stats-bar">
+      <span id="stats-text">로딩 중...</span>
+      <div class="view-toggle">
+        <button class="view-btn active" id="view-map" onclick="setView('map')">지도</button>
+        <button class="view-btn" id="view-list" onclick="setView('list')">목록</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div class="map-area">
+    <div id="map"></div>
+    <div class="map-placeholder" id="map-placeholder" style="display:none">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      <h3>지도를 활성화하려면</h3>
+      <p>
+        <a href="https://developers.kakao.com" target="_blank" style="color:var(--blue)">developers.kakao.com</a>에서<br>
+        JavaScript 앱 키를 발급받은 뒤<br>
+        <code>clubs.html</code> 상단의<br>
+        <code>KAKAO_APP_KEY</code>를 교체해주세요.<br><br>
+        지금은 좌측 목록으로 클럽을 확인할 수 있어요.
+      </p>
+    </div>
+
+    <!-- 클럽 상세 팝업 -->
+    <div class="club-popup" id="club-popup">
+      <button class="popup-close" onclick="closePopup()">×</button>
+      <div class="popup-name" id="popup-name"></div>
+      <div class="popup-addr" id="popup-addr"></div>
+      <div class="popup-tags" id="popup-tags"></div>
+      <div class="popup-note" id="popup-note"></div>
+      <div class="popup-actions">
+        <button class="popup-btn" onclick="openKakaoMap()">카카오맵에서 보기</button>
+        <button class="popup-btn primary" id="popup-tel"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WEAPON_LABEL = { '에페': '에페', '플뢰레': '플뢰레', '사브르': '사브르' };
+const WEAPON_TAG   = { '에페': 'tag-epee', '플뢰레': 'tag-foil', '사브르': 'tag-sabre' };
+const REGIONS = ['서울','경기남부','경기서부/인천','경기북부','경기동부','강원','충청/대전','경상권/부산','전라권','제주'];
+
+let allClubs = [];
+let filtered = [];
+let selectedWeapons = new Set();
+let selectedRegion = '';
+let searchQ = '';
+let kakaoLoaded = false;
+let markers = [];
+let selectedClub = null;
+let map = null;
+let clusterer = null;
+let currentView = 'map';
+
+// ── 데이터 로드 ──
+async function init() {
+  const res = await fetch('clubs_db.json');
+  allClubs = await res.json();
+
+  buildRegionChips();
+  applyFilter();
+
+  // 카카오맵 로드 확인
+  if (KAKAO_APP_KEY !== 'YOUR_KAKAO_APP_KEY') {
+    kakao.maps.load(initMap);
+  } else {
+    document.getElementById('map').style.display = 'none';
+    document.getElementById('map-placeholder').style.display = 'flex';
+  }
+}
+
+function buildRegionChips() {
+  const wrap = document.getElementById('region-chips');
+  REGIONS.forEach(r => {
+    const btn = document.createElement('button');
+    btn.className = 'chip chip-region';
+    btn.textContent = r === '경기남부' ? '경기남부' : r === '경기서부/인천' ? '서부/인천' :
+                      r === '경기북부' ? '경기북부' : r === '경기동부' ? '경기동부' : r;
+    btn.dataset.region = r;
+    btn.onclick = () => toggleRegion(r);
+    wrap.appendChild(btn);
+  });
+}
+
+// ── 필터 ──
+function toggleWeapon(w) {
+  if (selectedWeapons.has(w)) selectedWeapons.delete(w);
+  else selectedWeapons.add(w);
+  document.getElementById('chip-' + (w==='에페'?'epee':w==='플뢰레'?'foil':'sabre')).classList.toggle('active');
+  applyFilter();
+}
+
+function toggleRegion(r) {
+  selectedRegion = selectedRegion === r ? '' : r;
+  document.querySelectorAll('.chip-region').forEach(c => {
+    c.classList.toggle('active', c.dataset.region === selectedRegion);
+  });
+  applyFilter();
+}
+
+function applyFilter() {
+  filtered = allClubs.filter(c => {
+    if (searchQ && !c.name.includes(searchQ) && !c.address.includes(searchQ) && !c.district.includes(searchQ) && !c.weapons.some(w => w.includes(searchQ))) return false;
+    if (selectedWeapons.size > 0 && !c.weapons.some(w => selectedWeapons.has(w))) return false;
+    if (selectedRegion && c.region !== selectedRegion) return false;
+    return true;
+  });
+  renderList();
+  if (kakaoLoaded) updateMarkers();
+  document.getElementById('stats-text').innerHTML = `<strong>${filtered.length}</strong>개 클럽`;
+}
+
+// ── 리스트 렌더링 ──
+function renderList() {
+  const wrap = document.getElementById('club-list');
+  if (filtered.length === 0) {
+    wrap.innerHTML = '<div class="empty-state">조건에 맞는 클럽이 없어요</div>';
+    return;
+  }
+
+  // 지역별 그룹
+  const groups = {};
+  filtered.forEach(c => {
+    if (!groups[c.region]) groups[c.region] = [];
+    groups[c.region].push(c);
+  });
+
+  let html = '';
+  REGIONS.forEach(r => {
+    if (!groups[r]) return;
+    html += `<div class="region-header">${r} <span style="font-weight:400;opacity:.6">${groups[r].length}</span></div>`;
+    groups[r].forEach((c, i) => {
+      const tags = c.weapons.map(w =>
+        `<span class="weapon-tag ${WEAPON_TAG[w] || ''}">${w}</span>`
+      ).join('');
+      const sel = selectedClub?.id === c.id ? ' selected' : '';
+      html += `
+        <div class="club-item${sel}" onclick="selectClub(${c.id})" id="item-${c.id}">
+          <span class="club-num">${allClubs.indexOf(c)+1}</span>
+          <div class="club-info">
+            <div class="club-name">${c.name}</div>
+            <div class="club-addr">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              ${c.district} · ${c.address.replace(/^(서울|경기|인천|부산|대구|대전|광주|강원|경남|경북|전북|전남|충남|충북|제주)\s/,'')}
+            </div>
+            <div class="club-tags">${tags}</div>
+            ${c.note ? `<div style="font-size:11px;color:var(--teal);margin-top:3px">${c.note}</div>` : ''}
+          </div>
+        </div>`;
+    });
+  });
+  wrap.innerHTML = html;
+}
+
+// ── 클럽 선택 ──
+function selectClub(id) {
+  selectedClub = allClubs.find(c => c.id === id);
+  document.querySelectorAll('.club-item').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('item-' + id);
+  if (el) { el.classList.add('selected'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+  showPopup(selectedClub);
+  if (kakaoLoaded && map) {
+    map.setCenter(new kakao.maps.LatLng(selectedClub.lat, selectedClub.lng));
+    map.setLevel(4);
+  }
+}
+
+function showPopup(c) {
+  document.getElementById('popup-name').textContent = c.name;
+  document.getElementById('popup-addr').textContent = c.address;
+  document.getElementById('popup-tags').innerHTML = c.weapons.map(w =>
+    `<span class="weapon-tag ${WEAPON_TAG[w] || ''}">${w}</span>`
+  ).join('');
+  const noteEl = document.getElementById('popup-note');
+  noteEl.textContent = c.note || '';
+  noteEl.style.display = c.note ? 'block' : 'none';
+
+  const telBtn = document.getElementById('popup-tel');
+  if (c.tel) {
+    telBtn.textContent = '📞 ' + c.tel;
+    telBtn.onclick = () => location.href = 'tel:' + c.tel;
+    telBtn.style.display = '';
+  } else {
+    telBtn.style.display = 'none';
+  }
+
+  document.getElementById('club-popup').classList.add('show');
+}
+
+function closePopup() {
+  document.getElementById('club-popup').classList.remove('show');
+  document.querySelectorAll('.club-item').forEach(el => el.classList.remove('selected'));
+  selectedClub = null;
+}
+
+function openKakaoMap() {
+  if (!selectedClub) return;
+  const q = encodeURIComponent(selectedClub.name + ' ' + selectedClub.address);
+  window.open(`https://map.kakao.com/link/search/${q}`, '_blank');
+}
+
+// ── 카카오맵 ──
+function initMap() {
+  kakaoLoaded = true;
+  const container = document.getElementById('map');
+  map = new kakao.maps.Map(container, {
+    center: new kakao.maps.LatLng(36.5, 127.8),
+    level: 13,
+  });
+
+  clusterer = new kakao.maps.MarkerClusterer({
+    map, averageCenter: true, minLevel: 6,
+    styles: [{
+      width: '48px', height: '48px',
+      background: 'rgba(28,26,23,0.85)', borderRadius: '50%',
+      color: '#F5F2EC', textAlign: 'center', fontWeight: '500',
+      lineHeight: '48px', fontSize: '14px', fontFamily: "'Noto Sans KR', sans-serif",
+    }],
+  });
+
+  updateMarkers();
+}
+
+const WEAPON_COLORS = {
+  '에페':   '#1A6B5A',
+  '플뢰레': '#1A4A7A',
+  '사브르': '#C0392B',
+  'mixed':  '#5A4A3A',
+};
+
+function makeMarkerSVG(weapons) {
+  const color = weapons.length > 1 ? WEAPON_COLORS.mixed : (WEAPON_COLORS[weapons[0]] || '#1C1A17');
+  const label = weapons.length > 1 ? '복' : { '에페':'에','플뢰레':'플','사브르':'사' }[weapons[0]] || '펜';
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
+    <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 0C7.163 0 0 7.163 0 16c0 10 16 24 16 24S32 26 32 16C32 7.163 24.837 0 16 0z" fill="${color}"/>
+      <text x="16" y="20" text-anchor="middle" dominant-baseline="central" font-size="12" font-family="Noto Sans KR, sans-serif" fill="white" font-weight="500">${label}</text>
+    </svg>`)}`;
+}
+
+function updateMarkers() {
+  if (!kakaoLoaded) return;
+  markers.forEach(m => m.setMap(null));
+  markers = [];
+  clusterer.clear();
+
+  const newMarkers = filtered.map(c => {
+    const imgSrc = makeMarkerSVG(c.weapons.length ? c.weapons : ['mixed']);
+    const markerImg = new kakao.maps.MarkerImage(imgSrc, new kakao.maps.Size(32, 40));
+    const marker = new kakao.maps.Marker({
+      position: new kakao.maps.LatLng(c.lat, c.lng),
+      image: markerImg,
+      title: c.name,
+    });
+    kakao.maps.event.addListener(marker, 'click', () => selectClub(c.id));
+    return marker;
+  });
+
+  markers = newMarkers;
+  clusterer.addMarkers(newMarkers);
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('view-map').classList.toggle('active', v === 'map');
+  document.getElementById('view-list').classList.toggle('active', v === 'list');
+}
+
+// ── 검색 ──
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('search').addEventListener('input', e => {
+    searchQ = e.target.value.trim();
+    applyFilter();
+  });
+  init();
+});
+</script>
+</body>
+</html>

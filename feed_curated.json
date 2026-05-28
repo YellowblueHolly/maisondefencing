@@ -1,0 +1,24 @@
+[
+  {
+    "id": "cur-1",
+    "type": "image",
+    "source": "큐레이션",
+    "platform": "instagram",
+    "title": "파리 올림픽 사브르 결승 하이라이트",
+    "thumbnail": "",
+    "url": "https://www.instagram.com/fencing/",
+    "likes": 1240,
+    "date": "2024-08-05"
+  },
+  {
+    "id": "cur-2",
+    "type": "image",
+    "source": "큐레이션",
+    "platform": "instagram",
+    "title": "올림픽 금메달리스트 훈련 현장",
+    "thumbnail": "",
+    "url": "https://www.instagram.com/fencing/",
+    "likes": 892,
+    "date": "2024-09-12"
+  }
+]

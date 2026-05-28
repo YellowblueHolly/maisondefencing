@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>펜싱 피드 — 메종드펜싱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream: #F5F2EC; --paper: #FDFBF7; --ink: #1C1A17;
+    --muted: #6B6760; --faint: #E8E4DC; --border: rgba(28,26,23,0.1);
+    --border-strong: rgba(28,26,23,0.2);
+    --red: #C0392B; --red-bg: #FAF0EE;
+    --teal: #1A6B5A; --teal-bg: #E8F4F0;
+    --blue: #1A4A7A; --blue-bg: #EAF0F8;
+    --orange: #C84B11; --orange-bg: #FEF0E8;
+    --youtube: #FF0000;
+    --reddit: #FF4500;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Noto Sans KR', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--font-body); background: var(--cream); color: var(--ink); font-size: 14px; line-height: 1.6; }
+  a { text-decoration: none; color: inherit; }
+
+  /* Nav */
+  .nav { background: var(--paper); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; height: 56px; display: flex; align-items: center; }
+  .nav-logo { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: 2px; margin-right: 36px; white-space: nowrap; }
+  .nav-logo em { color: var(--red); font-style: normal; }
+  .nav-links { display: flex; gap: 2px; }
+  .nav-links a { font-size: 13px; color: var(--muted); padding: 5px 11px; border-radius: 6px; transition: all .15s; }
+  .nav-links a:hover { background: var(--cream); color: var(--ink); }
+  .nav-links a.active { background: var(--cream); color: var(--ink); font-weight: 500; }
+
+  /* Header */
+  .page-header { background: var(--ink); padding: 32px 32px 28px; }
+  .page-header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+  .page-header h1 { font-family: var(--font-display); font-size: 36px; font-weight: 400; letter-spacing: 2px; color: var(--cream); }
+  .page-header p { font-size: 12px; color: rgba(245,242,236,0.4); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 6px; }
+
+  /* API key setup banner */
+  .setup-banner {
+    background: #FFFBEA;
+    border-bottom: 1px solid #F0D080;
+    padding: 10px 32px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: #7A5500;
+  }
+  .setup-banner.show { display: flex; }
+  .setup-banner strong { font-weight: 500; }
+  .setup-banner a { color: var(--blue); text-decoration: underline; }
+  .setup-banner input {
+    flex: 1; max-width: 380px; padding: 5px 10px; border: 1px solid #D0B060;
+    border-radius: 6px; font-size: 12px; font-family: monospace; background: #fff;
+  }
+  .setup-banner button {
+    padding: 5px 14px; background: var(--ink); color: var(--cream); border: none;
+    border-radius: 6px; font-size: 12px; cursor: pointer; font-family: var(--font-body);
+  }
+
+  /* Filter bar */
+  .filter-bar { background: var(--paper); border-bottom: 1px solid var(--border); padding: 12px 32px; }
+  .filter-bar-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .filter-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-right: 4px; }
+  .chip { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border-strong); color: var(--muted); cursor: pointer; transition: all .15s; background: transparent; font-family: var(--font-body); display: flex; align-items: center; gap: 5px; }
+  .chip:hover { border-color: var(--ink); color: var(--ink); }
+  .chip.active { background: var(--ink); border-color: var(--ink); color: var(--cream); }
+  .chip-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-reddit { background: var(--reddit); }
+  .dot-youtube { background: var(--youtube); }
+  .dot-curator { background: var(--teal); }
+  .divider-v { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .sort-chip { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); cursor: pointer; background: transparent; font-family: var(--font-body); transition: all .15s; }
+  .sort-chip.active { background: var(--faint); color: var(--ink); border-color: var(--border-strong); }
+
+  /* Masonry grid */
+  .grid-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
+  .masonry {
+    columns: 4;
+    column-gap: 14px;
+  }
+  @media (max-width: 1100px) { .masonry { columns: 3; } }
+  @media (max-width: 750px)  { .masonry { columns: 2; } }
+  @media (max-width: 480px)  { .masonry { columns: 1; } }
+
+  .card {
+    break-inside: avoid;
+    margin-bottom: 14px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .15s, transform .15s;
+    display: block;
+  }
+  .card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+
+  /* Thumbnail */
+  .thumb {
+    width: 100%;
+    background: var(--faint);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .thumb img { width: 100%; display: block; object-fit: cover; }
+  .thumb-placeholder {
+    width: 100%;
+    padding: 32px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 52px;
+    min-height: 160px;
+    background: var(--faint);
+  }
+  .play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(28,26,23,0.25);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .card:hover .play-overlay { opacity: 1; }
+  .play-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .play-btn svg { margin-left: 3px; }
+
+  /* Source badge */
+  .source-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    font-size: 10px; font-weight: 500;
+    padding: 3px 8px; border-radius: 4px;
+    backdrop-filter: blur(4px);
+  }
+  .badge-reddit  { background: rgba(255,69,0,0.85); color: #fff; }
+  .badge-youtube { background: rgba(255,0,0,0.85);  color: #fff; }
+  .badge-curator { background: rgba(26,107,90,0.85); color: #fff; }
+
+  /* Card body */
+  .card-body { padding: 10px 12px 12px; }
+  .card-title { font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--muted); }
+  .card-channel { display: flex; align-items: center; gap: 4px; }
+  .card-channel svg { opacity: 0.5; }
+  .card-stats { display: flex; align-items: center; gap: 8px; }
+  .card-stats span { display: flex; align-items: center; gap: 3px; }
+
+  /* Loading / empty states */
+  .feed-status { text-align: center; padding: 20px; font-size: 13px; color: var(--muted); }
+  .section-header {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-header span { font-size: 11px; color: var(--muted); opacity: 0.6; }
+
+  /* Channel pills */
+  .channels-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .ch-pill {
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    background: var(--faint); color: var(--muted);
+    display: flex; align-items: center; gap: 4px;
+    border: 1px solid var(--border);
+  }
+  .ch-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .ch-dot-yt  { background: var(--youtube); }
+  .ch-dot-rd  { background: var(--reddit); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">MAISON <em>de</em> FENCING</a>
+    <div class="nav-links">
+      <a href="index.html">홈</a>
+      <a href="rules.html">규정 검색</a>
+      <a href="talk.html">펜싱톡</a>
+      <a href="board.html">게시판</a>
+      <a href="sites.html">사이트 모음</a>
+      <a href="clubs.html">클럽 찾기</a>
+    </div>
+  </div>
+</nav>
+
+<!-- YouTube API 키 설정 배너 (키 없을 때만 표시) -->
+<div class="setup-banner" id="api-banner">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+  <span><strong>YouTube 피드 활성화:</strong> <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a>에서 YouTube Data API v3 키를 발급해 입력하면 유튜버 피드가 표시됩니다.</span>
+  <input type="text" id="yt-key-input" placeholder="AIza... (YouTube Data API v3 키)">
+  <button onclick="saveYtKey()">저장</button>
+  <button onclick="document.getElementById('api-banner').classList.remove('show')" style="background:transparent;color:var(--muted);border:1px solid #D0B060;">닫기</button>
+</div>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <div>
+      <h1>펜싱 피드</h1>
+      <p>Reddit · YouTube · 큐레이션 — 해외 펜싱 콘텐츠 모음</p>
+    </div>
+    <div class="channels-row">
+      <span class="ch-pill"><span class="ch-dot ch-dot-rd"></span>r/fencing</span>
+      <span class="ch-pill"><span class="ch-dot ch-dot-yt"></span>SlicerSabre</span>
+      <span class="ch-pill"><span class="ch-dot ch-dot-yt"></span>FencingTuna</span>
+      <span class="ch-pill"><span class="ch-dot ch-dot-yt"></span>FencingNut</span>
+      <span class="ch-pill"><span class="ch-dot ch-dot-yt"></span>Untouche</span>
+      <span class="ch-pill"><span class="ch-dot ch-dot-yt"></span>FencingComedyClub</span>
+    </div>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-bar-inner">
+    <span class="filter-label">소스</span>
+    <button class="chip active" id="chip-all" onclick="setFilter('all')">
+      전체
+    </button>
+    <button class="chip" id="chip-reddit" onclick="setFilter('reddit')">
+      <span class="chip-dot dot-reddit"></span> Reddit r/fencing
+    </button>
+    <button class="chip" id="chip-youtube" onclick="setFilter('youtube')">
+      <span class="chip-dot dot-youtube"></span> YouTube
+    </button>
+    <button class="chip" id="chip-curator" onclick="setFilter('curator')">
+      <span class="chip-dot dot-curator"></span> 큐레이션
+    </button>
+    <div class="divider-v"></div>
+    <span class="filter-label">정렬</span>
+    <button class="sort-chip active" id="sort-new" onclick="setSort('new')">최신순</button>
+    <button class="sort-chip" id="sort-top" onclick="setSort('top')">인기순</button>
+  </div>
+</div>
+
+<div class="grid-wrap">
+  <div id="masonry" class="masonry"></div>
+  <div id="feed-status" class="feed-status">피드 로딩 중...</div>
+  <div style="text-align:center;margin-top:20px">
+    <button id="load-more" style="display:none;padding:10px 32px;border:1px solid var(--border-strong);border-radius:8px;background:var(--paper);color:var(--muted);font-size:13px;cursor:pointer;font-family:var(--font-body);transition:all .15s" onmouseover="this.style.background='var(--ink)';this.style.color='var(--cream)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--muted)'" onclick="loadMore()">
+      더 불러오기
+    </button>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────
+   CONFIG — YouTube 채널 목록
+   YouTube Data API v3 키를 넣으면 자동 활성화
+──────────────────────────────────────────*/
+const YT_CHANNELS = [
+  { handle: 'SlicerSabre',         id: 'UCrqJJBMmFkLTAkRbABQN5sA', name: 'SlicerSabre',          weapon: 'sabre' },
+  { handle: 'fencingtuna',          id: '',                          name: 'FencingTuna',           weapon: 'general' },
+  { handle: 'fencingnut',           id: '',                          name: 'FencingNut',            weapon: 'general' },
+  { handle: 'untouche',             id: '',                          name: 'Untouche',              weapon: 'general' },
+  { handle: 'fencingcomedyclub',    id: '',                          name: 'FencingComedyClub',     weapon: 'comedy'  },
+  { handle: 'FIEFencingChannel',    id: 'UCJEy8aBnqDymMIcJCh72gMw', name: 'FIE Fencing',           weapon: 'official'},
+  { handle: 'CyrusofChaos',         id: '',                          name: 'CyrusofChaos',          weapon: 'epee'    },
+  { handle: 'MissFencing',          id: 'UCMtQkmZV3UzkBJULrpe0V0w',  name: 'Miss Fencing',          weapon: 'general' },
+];
+
+const REDDIT_SUBS = ['fencing'];
+
+// ── 상태 ──
+let allItems = [];
+let filteredItems = [];
+let currentFilter = 'all';
+let currentSort = 'new';
+let displayCount = 24;
+let ytKey = localStorage.getItem('mdf_yt_key') || '';
+
+// ── YouTube 키 관리 ──
+function saveYtKey() {
+  const val = document.getElementById('yt-key-input').value.trim();
+  if (!val.startsWith('AIza')) { alert('올바른 YouTube API 키 형식이 아닙니다 (AIza...로 시작)'); return; }
+  ytKey = val;
+  localStorage.setItem('mdf_yt_key', val);
+  document.getElementById('api-banner').classList.remove('show');
+  loadYouTube();
+}
+
+if (!ytKey) {
+  document.getElementById('api-banner').classList.add('show');
+}
+
+// ── 유틸 ──
+function formatCount(n) {
+  if (!n) return '0';
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'k';
+  return String(n);
+}
+function timeAgo(dateStr) {
+  const diff = (Date.now() - new Date(dateStr)) / 1000;
+  if (diff < 3600)   return Math.floor(diff/60) + '분 전';
+  if (diff < 86400)  return Math.floor(diff/3600) + '시간 전';
+  if (diff < 604800) return Math.floor(diff/86400) + '일 전';
+  if (diff < 2592000) return Math.floor(diff/604800) + '주 전';
+  return Math.floor(diff/2592000) + '개월 전';
+}
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Reddit 로드 ──
+async function loadReddit() {
+  try {
+    const sort = currentSort === 'top' ? 'top' : 'new';
+    const url = `https://www.reddit.com/r/fencing/${sort}.json?limit=40&t=month`;
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const data = await res.json();
+    const posts = data.data.children.map(c => c.data);
+
+    const items = posts
+      .filter(p => !p.stickied && (p.post_hint === 'image' || p.is_video || p.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) || p.thumbnail?.startsWith('http')))
+      .map(p => ({
+        id: 'reddit-' + p.id,
+        source: 'reddit',
+        platform: 'Reddit',
+        type: p.is_video ? 'video' : 'image',
+        title: p.title,
+        thumbnail: p.preview?.images?.[0]?.resolutions?.[2]?.url?.replace(/&amp;/g,'&') ||
+                   p.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&') ||
+                   (p.thumbnail?.startsWith('http') ? p.thumbnail : null),
+        url: 'https://reddit.com' + p.permalink,
+        channel: 'r/fencing',
+        channelUrl: 'https://reddit.com/r/fencing',
+        likes: p.score,
+        comments: p.num_comments,
+        date: new Date(p.created_utc * 1000).toISOString(),
+        emoji: p.is_video ? '🎬' : '🤺',
+      }));
+
+    addItems(items);
+  } catch(e) {
+    console.warn('Reddit 로드 실패:', e);
+    addItems([]);
+  }
+}
+
+// ── YouTube 로드 ──
+async function loadYouTube() {
+  if (!ytKey) return;
+
+  const validChannels = YT_CHANNELS.filter(c => c.id);
+  const promises = validChannels.map(ch => fetchYTChannel(ch));
+  const results = await Promise.allSettled(promises);
+
+  const items = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+  addItems(items);
+}
+
+async function fetchYTChannel(ch) {
+  try {
+    const url = `https://www.googleapis.com/youtube/v3/search?channelId=${ch.id}&part=snippet&order=date&maxResults=10&type=video&key=${ytKey}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('YT API error ' + res.status);
+    const data = await res.json();
+
+    return (data.items || []).map(item => ({
+      id: 'yt-' + item.id.videoId,
+      source: 'youtube',
+      platform: 'YouTube',
+      type: 'video',
+      title: item.snippet.title,
+      thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
+      url: 'https://www.youtube.com/watch?v=' + item.id.videoId,
+      channel: ch.name,
+      channelUrl: 'https://youtube.com/@' + ch.handle,
+      likes: null,
+      comments: null,
+      date: item.snippet.publishedAt,
+      emoji: '▶️',
+      weapon: ch.weapon,
+    }));
+  } catch(e) {
+    console.warn(`YouTube 채널 ${ch.name} 로드 실패:`, e);
+    return [];
+  }
+}
+
+// ── 큐레이션 로드 ──
+async function loadCurated() {
+  try {
+    const res = await fetch('feed_curated.json');
+    if (!res.ok) return;
+    const data = await res.json();
+    const items = data.map(d => ({
+      ...d,
+      source: 'curator',
+      platform: d.platform || '큐레이션',
+      type: d.type || 'image',
+      emoji: '⭐',
+    }));
+    addItems(items);
+  } catch(e) {
+    // 파일 없어도 무시
+  }
+}
+
+// ── 아이템 추가 및 렌더링 ──
+function addItems(newItems) {
+  allItems.push(...newItems);
+  applyFilterSort();
+}
+
+function applyFilterSort() {
+  let items = [...allItems];
+
+  // 필터
+  if (currentFilter !== 'all') {
+    items = items.filter(i => i.source === currentFilter);
+  }
+
+  // 정렬
+  if (currentSort === 'top') {
+    items.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+  } else {
+    items.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }
+
+  filteredItems = items;
+  renderGrid();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('masonry');
+  const status = document.getElementById('feed-status');
+  const moreBtn = document.getElementById('load-more');
+
+  const toShow = filteredItems.slice(0, displayCount);
+
+  if (toShow.length === 0) {
+    grid.innerHTML = '';
+    status.textContent = allItems.length === 0
+      ? '피드 로딩 중...'
+      : '이 소스의 콘텐츠가 없어요.';
+    moreBtn.style.display = 'none';
+    return;
+  }
+
+  status.textContent = '';
+  grid.innerHTML = toShow.map(item => renderCard(item)).join('');
+  moreBtn.style.display = filteredItems.length > displayCount ? 'block' : 'none';
+}
+
+function renderCard(item) {
+  const badgeClass = {
+    reddit:  'badge-reddit',
+    youtube: 'badge-youtube',
+    curator: 'badge-curator',
+  }[item.source] || 'badge-curator';
+
+  const platformLabel = {
+    reddit:  'Reddit',
+    youtube: 'YouTube',
+    curator: '큐레이션',
+  }[item.source] || item.platform;
+
+  const thumbHtml = item.thumbnail
+    ? `<img src="${escHtml(item.thumbnail)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\"thumb-placeholder\\">${item.emoji}</div>'">`
+    : `<div class="thumb-placeholder">${item.emoji}</div>`;
+
+  const statsHtml = [
+    item.likes    != null ? `<span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>${formatCount(item.likes)}</span>` : '',
+    item.comments != null ? `<span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${formatCount(item.comments)}</span>` : '',
+    `<span>${timeAgo(item.date)}</span>`,
+  ].filter(Boolean).join('');
+
+  return `
+    <a href="${escHtml(item.url)}" target="_blank" rel="noopener" class="card">
+      <div class="thumb">
+        ${thumbHtml}
+        <span class="source-badge ${badgeClass}">${platformLabel}</span>
+        ${item.type === 'video' ? `
+        <div class="play-overlay">
+          <div class="play-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--ink)"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+        </div>` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-title">${escHtml(item.title)}</div>
+        <div class="card-meta">
+          <span class="card-channel">
+            ${item.source === 'youtube' ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20.06 12 20.06 12 20.06s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>` : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>`}
+            ${escHtml(item.channel)}
+          </span>
+          <div class="card-stats">${statsHtml}</div>
+        </div>
+      </div>
+    </a>`;
+}
+
+function loadMore() {
+  displayCount += 24;
+  renderGrid();
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  displayCount = 24;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('chip-' + f).classList.add('active');
+  applyFilterSort();
+}
+
+function setSort(s) {
+  currentSort = s;
+  displayCount = 24;
+  document.querySelectorAll('.sort-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('sort-' + s).classList.add('active');
+  // Reddit은 정렬이 서버사이드 - 다시 로드
+  if (s !== currentSort) {
+    allItems = allItems.filter(i => i.source !== 'reddit');
+    loadReddit();
+  }
+  applyFilterSort();
+}
+
+// ── 초기 로드 ──
+Promise.all([
+  loadReddit(),
+  loadYouTube(),
+  loadCurated(),
+]).then(() => {
+  if (allItems.length === 0) {
+    document.getElementById('feed-status').textContent = '콘텐츠를 불러오지 못했어요. 새로고침 해보세요.';
+  }
+});
+</script>
+</body>
+</html>

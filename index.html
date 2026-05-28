@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>메종드펜싱 — Maison de Fencing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream:  #F5F2EC;
+    --paper:  #FDFBF7;
+    --ink:    #1C1A17;
+    --muted:  #6B6760;
+    --faint:  #E8E4DC;
+    --red:    #C0392B;
+    --red-bg: #FAF0EE;
+    --teal:   #1A6B5A;
+    --teal-bg:#E8F4F0;
+    --blue:   #1A4A7A;
+    --blue-bg:#EAF0F8;
+    --border: rgba(28,26,23,0.1);
+    --border-strong: rgba(28,26,23,0.18);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body:    'Noto Sans KR', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    background: var(--cream);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  a { text-decoration: none; color: inherit; }
+  button { font-family: var(--font-body); cursor: pointer; }
+
+  /* ── Topbar ── */
+  .topbar {
+    background: var(--ink);
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-align: center;
+    padding: 6px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topbar span { color: rgba(255,255,255,0.35); }
+  .topbar strong { color: rgba(255,255,255,0.7); font-weight: 500; }
+
+  /* ── Nav ── */
+  .nav {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-inner {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--ink);
+    margin-right: 40px;
+    white-space: nowrap;
+  }
+  .nav-logo em { color: var(--red); font-style: normal; }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+  }
+  .nav-links a {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .nav-links a:hover { background: var(--cream); color: var(--ink); }
+  .nav-links a.active { background: var(--cream); color: var(--ink); font-weight: 500; }
+  .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .btn-ghost {
+    font-size: 13px;
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { background: var(--cream); color: var(--ink); }
+  .btn-primary {
+    font-size: 13px;
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--ink);
+    color: #F5F2EC;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+
+  /* ── Hero ── */
+  .hero {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 56px 32px 52px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(255,255,255,0.03) 59px, rgba(255,255,255,0.03) 60px),
+      repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(255,255,255,0.03) 59px, rgba(255,255,255,0.03) 60px);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1140px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    position: relative;
+  }
+  .hero-left h1 {
+    font-family: var(--font-display);
+    font-size: 72px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    line-height: 0.9;
+    color: var(--cream);
+  }
+  .hero-left h1 em { color: var(--red); font-style: italic; }
+  .hero-sub {
+    font-size: 13px;
+    color: rgba(245,242,236,0.5);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 16px;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+  }
+  .stat { text-align: right; }
+  .stat-n {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 500;
+    color: var(--cream);
+    line-height: 1;
+  }
+  .stat-l {
+    font-size: 11px;
+    color: rgba(245,242,236,0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .stat-div { width: 1px; height: 48px; background: rgba(255,255,255,0.12); }
+
+  /* ── Search bar ── */
+  .search-bar-wrap {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+  }
+  .search-bar-inner {
+    max-width: 1140px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .search-input-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    height: 42px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: var(--cream);
+    transition: border-color 0.15s;
+  }
+  .search-input-wrap:focus-within { border-color: var(--ink); }
+  .search-input-wrap svg { flex-shrink: 0; opacity: 0.35; }
+  .search-input-wrap input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+  }
+  .search-input-wrap input::placeholder { color: var(--muted); }
+  .search-tags { display: flex; gap: 6px; }
+  .tag {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tag:hover { border-color: var(--ink); color: var(--ink); background: var(--cream); }
+  .tag.tag-blue { background: var(--blue-bg); color: var(--blue); border-color: transparent; }
+  .tag.tag-teal { background: var(--teal-bg); color: var(--teal); border-color: transparent; }
+  .tag.tag-red  { background: var(--red-bg);  color: var(--red);  border-color: transparent; }
+
+  /* ── Main layout ── */
+  .page {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+    align-items: start;
+  }
+  .main-col { display: flex; flex-direction: column; gap: 24px; }
+  .sidebar-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── Section header ── */
+  .sec-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .sec-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sec-title svg { opacity: 0.5; }
+  .sec-more {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+  .sec-more:hover { background: var(--faint); color: var(--ink); }
+
+  /* ── Card wrapper ── */
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+  }
+
+  /* ── Meme grid ── */
+  .meme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .meme-card {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .meme-card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .meme-thumb {
+    aspect-ratio: 1;
+    background: var(--faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .meme-thumb-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 6px 8px;
+    background: linear-gradient(transparent, rgba(28,26,23,0.55));
+    font-size: 11px;
+    color: #fff;
+    font-weight: 500;
+  }
+  .meme-source-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .badge-reddit { background: rgba(255,69,0,0.15); color: #D14000; }
+  .badge-curator { background: rgba(26,74,122,0.12); color: var(--blue); }
+  .meme-meta { padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; }
+  .meme-likes { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .meme-sub-source { font-size: 11px; color: var(--muted); }
+
+  /* ── 펜싱톡 feed ── */
+  .talk-list { display: flex; flex-direction: column; }
+  .talk-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .talk-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .talk-item:hover .talk-title { color: var(--red); }
+  .talk-title { font-size: 14px; line-height: 1.45; transition: color 0.15s; }
+  .talk-foot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .talk-foot span { display: flex; align-items: center; gap: 3px; }
+
+  /* ── 자유게시판 widget ── */
+  .post-list { display: flex; flex-direction: column; }
+  .post-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .post-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .post-item:hover .post-title { color: var(--red); }
+  .post-title { font-size: 13px; line-height: 1.4; transition: color 0.15s; }
+  .post-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .pill {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .pill-new { background: var(--red-bg); color: var(--red); }
+  .pill-hot { background: #FFF5E0; color: #8B5E00; }
+
+  /* ── 클럽 widget ── */
+  .club-list { display: flex; flex-direction: column; gap: 6px; }
+  .club-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    background: var(--cream);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .club-row:hover { border-color: var(--border-strong); background: var(--paper); }
+  .club-name { font-size: 13px; font-weight: 500; }
+  .club-loc { font-size: 11px; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 3px; }
+  .club-tag-pill {
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .tag-epee   { background: var(--teal-bg); color: var(--teal); }
+  .tag-foil   { background: var(--blue-bg); color: var(--blue); }
+  .tag-sabre  { background: var(--red-bg);  color: var(--red); }
+  .btn-map {
+    width: 100%;
+    margin-top: 10px;
+    padding: 9px;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .btn-map:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+
+  /* ── Quick links widget ── */
+  .quicklinks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .qlink {
+    padding: 10px 12px;
+    background: var(--cream);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.15s;
+  }
+  .qlink:hover { background: var(--paper); border-color: var(--border-strong); color: var(--ink); }
+  .qlink svg { flex-shrink: 0; opacity: 0.5; }
+
+  /* ── 사이트 모음 mini ── */
+  .site-list { display: flex; flex-direction: column; gap: 6px; }
+  .site-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .site-row:hover { background: var(--cream); border-color: var(--border); }
+  .site-favicon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .site-name { font-size: 13px; font-weight: 500; }
+  .site-desc { font-size: 11px; color: var(--muted); }
+  .site-arrow { margin-left: auto; color: var(--muted); opacity: 0.4; }
+
+  /* ── Footer ── */
+  .footer {
+    background: var(--ink);
+    color: rgba(245,242,236,0.35);
+    font-size: 12px;
+    text-align: center;
+    padding: 24px 32px;
+    margin-top: 40px;
+    letter-spacing: 0.5px;
+  }
+  .footer strong { color: rgba(245,242,236,0.7); font-weight: 500; }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: var(--border); margin: 0 0 16px; }
+
+  /* ── Inline SVG icons ── */
+  .icon { display: inline-flex; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <span>펜싱 커뮤니티 &mdash; 비공개 베타</span>
+  <strong>MAISON DE FENCING</strong>
+  <span>규정 · 밈 · 클럽 · 게시판</span>
+</div>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">MAISON <em>de</em> FENCING</a>
+    <div class="nav-links">
+      <a href="index.html" class="active">홈</a>
+      <a href="rules.html">규정 검색</a>
+      <a href="talk.html">펜싱톡</a>
+      <a href="board.html">게시판</a>
+      <a href="sites.html">사이트 모음</a>
+      <a href="clubs.html">클럽 찾기</a>
+    </div>
+    <div class="nav-right">
+      <button class="btn-ghost">로그인</button>
+      <button class="btn-primary">회원가입</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <h1>MAISON<br><em>de</em><br>FENCING</h1>
+      <p class="hero-sub">규정 · 밈 · 클럽 · 커뮤니티</p>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-n" id="stat-rules">291</div>
+        <div class="stat-l">규정 조문</div>
+      </div>
+      <div class="stat-div"></div>
+      <div class="stat">
+        <div class="stat-n" id="stat-clubs">48</div>
+        <div class="stat-l">등록 클럽</div>
+      </div>
+      <div class="stat-div"></div>
+      <div class="stat">
+        <div class="stat-n" id="stat-posts">1.2k</div>
+        <div class="stat-l">게시글</div>
+      </div>
+      <div class="stat-div"></div>
+      <div class="stat">
+        <div class="stat-n" id="stat-members">320</div>
+        <div class="stat-l">회원</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Search bar -->
+<div class="search-bar-wrap">
+  <div class="search-bar-inner">
+    <div class="search-input-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" placeholder="경기규칙, 판정, 장비 규격, 조문 번호로 검색..." id="main-search">
+    </div>
+    <div class="search-tags">
+      <button class="tag tag-blue" onclick="goSearch('플뢰레')">플뢰레</button>
+      <button class="tag tag-teal" onclick="goSearch('에페')">에페</button>
+      <button class="tag tag-red" onclick="goSearch('사브르')">사브르</button>
+      <button class="tag" onclick="goSearch('장비 규격')">장비 규격</button>
+      <button class="tag" onclick="goSearch('판정')">판정</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="page">
+  <!-- Left: Main column -->
+  <div class="main-col">
+
+    <!-- 밈 & 해외 피드 -->
+    <div class="card">
+      <div class="sec-header">
+        <div class="sec-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          펜싱 밈 &amp; 해외 피드
+        </div>
+        <a href="feed.html" class="sec-more">
+          더보기
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="meme-grid" id="meme-grid">
+        <!-- JS로 채워짐 -->
+      </div>
+    </div>
+
+    <!-- 펜싱톡 -->
+    <div class="card">
+      <div class="sec-header">
+        <div class="sec-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          펜싱톡 최신 글
+        </div>
+        <a href="talk.html" class="sec-more">
+          더보기
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="talk-list" id="talk-list">
+        <!-- JS로 채워짐 -->
+      </div>
+    </div>
+
+    <!-- 사이트 모음 미리보기 -->
+    <div class="card">
+      <div class="sec-header">
+        <div class="sec-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          사이트 모음
+        </div>
+        <a href="sites.html" class="sec-more">
+          전체 보기
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="site-list" id="site-list">
+        <!-- JS로 채워짐 -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: Sidebar -->
+  <div class="sidebar-col">
+
+    <!-- 자유게시판 최신글 -->
+    <div class="card">
+      <div class="sec-header" style="margin-bottom:10px">
+        <div class="sec-title" style="font-size:15px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          자유게시판
+        </div>
+        <a href="board.html" class="sec-more" style="font-size:11px">더보기</a>
+      </div>
+      <div class="post-list" id="post-list"></div>
+      <a href="board.html?write=1" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;padding:8px;background:var(--ink);color:var(--cream);border-radius:var(--radius-sm);font-size:12px;font-weight:500;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        글쓰기
+      </a>
+    </div>
+
+    <!-- 내 근처 클럽 -->
+    <div class="card">
+      <div class="sec-header" style="margin-bottom:10px">
+        <div class="sec-title" style="font-size:15px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          내 근처 클럽
+        </div>
+        <a href="clubs.html" class="sec-more" style="font-size:11px">지도 보기</a>
+      </div>
+      <div class="club-list" id="club-list"></div>
+      <button class="btn-map" onclick="location.href='clubs.html'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+        전체 클럽 지도로 보기
+      </button>
+    </div>
+
+    <!-- 빠른 이동 -->
+    <div class="card">
+      <div class="sec-header" style="margin-bottom:10px">
+        <div class="sec-title" style="font-size:15px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          빠른 이동
+        </div>
+      </div>
+      <div class="quicklinks">
+        <a href="rules.html" class="qlink">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          경기규칙
+        </a>
+        <a href="talk.html" class="qlink">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          펜싱톡
+        </a>
+        <a href="board.html" class="qlink">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          게시판
+        </a>
+        <a href="sites.html" class="qlink">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          사이트 모음
+        </a>
+        <a href="clubs.html" class="qlink">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          클럽 찾기
+        </a>
+        <a href="feed.html" class="qlink">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          밈 피드
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <strong>MAISON DE FENCING</strong> &mdash; 메종드펜싱 &copy; 2025 &nbsp;·&nbsp; 규정 출처: 대한펜싱협회 &nbsp;·&nbsp; 문의: admin@maisonfencing.kr
+</footer>
+
+<script>
+/* ───────────────────────────────────────────
+   데이터 — 나중에 JSON 파일로 분리 가능
+─────────────────────────────────────────── */
+
+const MEMES = [
+  { emoji: '🤺', label: '오늘의 훈련', source: 'reddit', sub: 'r/Fencing', likes: '2.4k' },
+  { emoji: '⚔️', label: 'FIE 2024 하이라이트', source: 'reddit', sub: 'r/Fencing', likes: '1.1k' },
+  { emoji: '🏅', label: '파리 올림픽 레전드', source: 'curator', sub: '큐레이션', likes: '891' },
+  { emoji: '😅', label: '에페 찍힘 당한 날', source: 'reddit', sub: 'r/Fencing', likes: '3.2k' },
+  { emoji: '🎯', label: 'touché 순간', source: 'curator', sub: '큐레이션', likes: '456' },
+  { emoji: '🥇', label: '전국체전 시상식', source: 'reddit', sub: 'r/Fencing', likes: '734' },
+];
+
+const TALK = [
+  { title: '2025 전국체전 펜싱 종목 결과 총정리 — 플뢰레 여자부 금메달 이변', views: '3,210', comments: '47', time: '2시간 전' },
+  { title: '입문자를 위한 장비 추천 2025 — 에페 vs 플뢰레 vs 사브르 어떤 걸 먼저?', views: '1,840', comments: '23', time: '어제' },
+  { title: '파리 올림픽 이후 한국 펜싱 저변 확대가 체감되시나요?', views: '920', comments: '61', time: '3일 전' },
+  { title: '세계 랭킹 1위 선수들의 훈련 영상 모음 (2025 업데이트)', views: '2,105', comments: '18', time: '4일 전' },
+];
+
+const POSTS = [
+  { title: '우리 클럽 신입 모집합니다 — 서울 마포구', time: '5분 전', comments: 3, badge: 'new' },
+  { title: '심판 자격증 취득 후기 공유해요', time: '1시간 전', comments: 28, badge: 'hot' },
+  { title: '중고 장비 팝니다 — 사브르 마스크 + 재킷 세트', time: '어제', comments: 7, badge: null },
+  { title: '에페 초보인데 훈련 영상 어디서 보나요?', time: '2일 전', comments: 14, badge: null },
+];
+
+const CLUBS = [
+  { name: '서울 펜싱 아카데미', loc: '강남구 · 2.1km', weapon: '에페', cls: 'tag-epee' },
+  { name: '마포 펜싱 클럽', loc: '마포구 · 3.8km', weapon: '플뢰레', cls: 'tag-foil' },
+  { name: '올림픽 체육관 펜싱부', loc: '송파구 · 5.4km', weapon: '사브르', cls: 'tag-sabre' },
+];
+
+const SITES = [
+  { icon: '🏛', name: '대한펜싱협회', desc: '공식 협회 홈페이지', url: 'https://www.fencing.or.kr' },
+  { icon: '🌍', name: 'FIE 국제펜싱연맹', desc: '세계 랭킹 · 대회 일정', url: 'https://fie.org' },
+  { icon: '🛒', name: '펜싱 용품 쇼핑', desc: '국내 용품 구매처 모음', url: 'sites.html' },
+];
+
+/* ───────────────────────────────────────────
+   렌더링
+─────────────────────────────────────────── */
+
+function renderMemes() {
+  const grid = document.getElementById('meme-grid');
+  grid.innerHTML = MEMES.map(m => `
+    <div class="meme-card" onclick="location.href='feed.html'">
+      <div class="meme-thumb" style="font-size:44px">
+        ${m.emoji}
+        <span class="meme-source-badge ${m.source === 'reddit' ? 'badge-reddit' : 'badge-curator'}">
+          ${m.source === 'reddit' ? 'Reddit' : '큐레이션'}
+        </span>
+        <div class="meme-thumb-label">${m.label}</div>
+      </div>
+      <div class="meme-meta">
+        <span class="meme-sub-source">${m.sub}</span>
+        <span class="meme-likes">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          ${m.likes}
+        </span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTalk() {
+  const list = document.getElementById('talk-list');
+  list.innerHTML = TALK.map(t => `
+    <div class="talk-item" onclick="location.href='talk.html'">
+      <div class="talk-title">${t.title}</div>
+      <div class="talk-foot">
+        <span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          ${t.views}
+        </span>
+        <span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          ${t.comments}
+        </span>
+        <span>${t.time}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPosts() {
+  const list = document.getElementById('post-list');
+  list.innerHTML = POSTS.map(p => `
+    <div class="post-item" onclick="location.href='board.html'">
+      <div class="post-title">${p.title}</div>
+      <div class="post-foot">
+        ${p.badge === 'new' ? '<span class="pill pill-new">NEW</span>' : ''}
+        ${p.badge === 'hot' ? '<span class="pill pill-hot">HOT</span>' : ''}
+        <span>${p.time}</span>
+        <span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          ${p.comments}
+        </span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderClubs() {
+  const list = document.getElementById('club-list');
+  list.innerHTML = CLUBS.map(c => `
+    <div class="club-row" onclick="location.href='clubs.html'">
+      <div>
+        <div class="club-name">${c.name}</div>
+        <div class="club-loc">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${c.loc}
+        </div>
+      </div>
+      <span class="club-tag-pill ${c.cls}">${c.weapon}</span>
+    </div>
+  `).join('');
+}
+
+function renderSites() {
+  const list = document.getElementById('site-list');
+  list.innerHTML = SITES.map(s => `
+    <a href="${s.url}" target="${s.url.startsWith('http') ? '_blank' : '_self'}" class="site-row">
+      <div class="site-favicon">${s.icon}</div>
+      <div>
+        <div class="site-name">${s.name}</div>
+        <div class="site-desc">${s.desc}</div>
+      </div>
+      <span class="site-arrow">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </span>
+    </a>
+  `).join('');
+}
+
+/* ───────────────────────────────────────────
+   검색
+─────────────────────────────────────────── */
+
+function goSearch(q) {
+  location.href = 'rules.html?q=' + encodeURIComponent(q);
+}
+
+document.getElementById('main-search').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    goSearch(e.target.value.trim());
+  }
+});
+
+/* ───────────────────────────────────────────
+   Init
+─────────────────────────────────────────── */
+
+renderMemes();
+renderTalk();
+renderPosts();
+renderClubs();
+renderSites();
+</script>
+</body>
+</html>
