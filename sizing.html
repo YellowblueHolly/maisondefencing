@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>펜싱복 사이즈 조견표 — 메종드펜싱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream: #F5F2EC; --paper: #FDFBF7; --ink: #1C1A17;
+    --muted: #6B6760; --faint: #E8E4DC;
+    --border: rgba(28,26,23,0.1); --border-strong: rgba(28,26,23,0.2);
+    --red: #C0392B; --red-bg: #FAF0EE; --red-light: #F5D5CF;
+    --teal: #1A6B5A; --teal-bg: #E8F4F0; --teal-light: #B8DDD6;
+    --blue: #1A4A7A; --blue-bg: #EAF0F8; --blue-light: #B8CCE8;
+    --amber: #8B5E00; --amber-bg: #FFF8E6; --amber-light: #F0D898;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Noto Sans KR', sans-serif;
+    --allstar: #C0392B;
+    --negrini: #1A6B5A;
+    --leonpaul: #1A4A7A;
+    --fw: #8B5E00;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--font-body); background: var(--cream); color: var(--ink); font-size: 14px; line-height: 1.6; }
+  a { text-decoration: none; color: inherit; }
+  button { font-family: var(--font-body); cursor: pointer; }
+
+  /* Nav */
+  .nav { background: var(--paper); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; height: 56px; display: flex; align-items: center; }
+  .nav-logo { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: 2px; margin-right: 36px; white-space: nowrap; }
+  .nav-logo em { color: var(--red); font-style: normal; }
+  .nav-links { display: flex; gap: 2px; }
+  .nav-links a { font-size: 13px; color: var(--muted); padding: 5px 11px; border-radius: 6px; transition: all .15s; }
+  .nav-links a:hover { background: var(--cream); color: var(--ink); }
+  .nav-links a.active { background: var(--cream); color: var(--ink); font-weight: 500; }
+
+  /* Header */
+  .page-header { background: var(--ink); padding: 36px 32px 32px; }
+  .page-header-inner { max-width: 1100px; margin: 0 auto; }
+  .page-header h1 { font-family: var(--font-display); font-size: 36px; font-weight: 400; letter-spacing: 2px; color: var(--cream); }
+  .page-header p { font-size: 12px; color: rgba(245,242,236,0.45); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 6px; }
+
+  /* Main layout */
+  .page-body { max-width: 1100px; margin: 0 auto; padding: 28px 32px; }
+
+  /* Brand badges */
+  .brand-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 4px;
+    letter-spacing: .5px; text-transform: uppercase;
+  }
+  .brand-allstar { background: var(--red-bg); color: var(--allstar); border: 1px solid var(--red-light); }
+  .brand-negrini { background: var(--teal-bg); color: var(--negrini); border: 1px solid var(--teal-light); }
+  .brand-leonpaul { background: var(--blue-bg); color: var(--leonpaul); border: 1px solid var(--blue-light); }
+  .brand-fw { background: var(--amber-bg); color: var(--fw); border: 1px solid var(--amber-light); }
+
+  /* Controls */
+  .controls { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .seg-group { display: flex; background: var(--faint); border-radius: 8px; padding: 3px; gap: 2px; }
+  .seg-btn { padding: 7px 18px; border-radius: 6px; border: none; background: transparent; font-size: 13px; color: var(--muted); font-family: var(--font-body); transition: all .15s; }
+  .seg-btn.active { background: var(--paper); color: var(--ink); font-weight: 500; box-shadow: 0 1px 3px rgba(28,26,23,0.1); }
+  .seg-btn:hover:not(.active) { color: var(--ink); }
+
+  /* Size finder */
+  .finder-card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  .finder-title { font-size: 14px; font-weight: 500; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .finder-title svg { opacity: .5; }
+  .finder-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .finder-group { display: flex; flex-direction: column; gap: 5px; }
+  .finder-group label { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: .5px; }
+  .finder-group input {
+    padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: 7px;
+    font-size: 14px; color: var(--ink); background: var(--cream); outline: none;
+    font-family: var(--font-body); transition: border-color .15s;
+  }
+  .finder-group input:focus { border-color: var(--ink); }
+  .finder-group input::placeholder { color: var(--muted); }
+  .finder-btn {
+    align-self: flex-end; padding: 9px 20px; background: var(--ink); color: var(--cream);
+    border: none; border-radius: 7px; font-size: 13px; font-weight: 500; transition: opacity .15s;
+  }
+  .finder-btn:hover { opacity: .85; }
+  .finder-result {
+    margin-top: 16px; padding: 14px 16px;
+    background: var(--cream); border-radius: 8px;
+    display: none; font-size: 13px;
+  }
+  .finder-result.show { display: block; }
+  .result-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .result-item { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+
+  /* Size table */
+  .table-wrap { background: var(--paper); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+  .table-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .table-title { font-family: var(--font-display); font-size: 18px; font-weight: 500; letter-spacing: 1px; }
+  .table-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 10px 14px; text-align: center; color: var(--muted); border-bottom: 1px solid var(--border); }
+  th.col-allstar { background: var(--red-bg); color: var(--allstar); }
+  th.col-negrini { background: var(--teal-bg); color: var(--negrini); }
+  th.col-leonpaul { background: var(--blue-bg); color: var(--leonpaul); }
+  th.col-fw { background: var(--amber-bg); color: var(--fw); }
+  td { padding: 11px 14px; text-align: center; border-bottom: 1px solid var(--border); font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(245,242,236,0.6); }
+  td.size-num { font-size: 16px; font-weight: 600; }
+  td.allstar-size { color: var(--allstar); font-size: 16px; font-weight: 700; }
+  td.negrini-size { color: var(--negrini); font-size: 15px; font-weight: 600; }
+  td.leonpaul-size { color: var(--leonpaul); font-size: 15px; font-weight: 600; }
+  td.fw-size { color: var(--fw); font-size: 15px; font-weight: 600; }
+  td.measurement { font-size: 12px; color: var(--muted); }
+  td.highlight { background: rgba(192,57,43,0.04); }
+  .approx { font-size: 10px; color: var(--muted); display: block; margin-top: 1px; }
+
+  /* Brand legend */
+  .legend { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Notes */
+  .note-card { background: var(--faint); border-radius: 8px; padding: 14px 16px; font-size: 12px; color: var(--muted); line-height: 1.7; border: 1px solid var(--border); margin-bottom: 16px; }
+  .note-card strong { color: var(--ink); }
+
+  /* Section divider */
+  .sec-div { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .finder-inputs { grid-template-columns: 1fr 1fr; }
+    table { font-size: 12px; }
+    td, th { padding: 8px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">MAISON <em>de</em> FENCING</a>
+    <div class="nav-links">
+      <a href="index.html">홈</a>
+      <a href="rules.html">규정 검색</a>
+      <a href="board.html">게시판</a>
+      <a href="feed.html">펜싱 피드</a>
+      <a href="sites.html">사이트 모음</a>
+      <a href="clubs.html">클럽 찾기</a>
+      <a href="sizing.html" class="active">사이즈 조견표</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1>펜싱복 사이즈 조견표</h1>
+    <p>Allstar · Negrini · Leon Paul · FencingWarehouse — 브랜드 간 사이즈 비교</p>
+  </div>
+</div>
+
+<div class="page-body">
+
+  <!-- 브랜드 범례 -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+    <span class="brand-badge brand-allstar">● Allstar</span>
+    <span style="font-size:12px;color:var(--red);font-weight:500">← 기준</span>
+    <span class="brand-badge brand-negrini">● Negrini</span>
+    <span class="brand-badge brand-leonpaul">● Leon Paul</span>
+    <span class="brand-badge brand-fw">● FencingWarehouse</span>
+  </div>
+
+  <!-- 컨트롤 -->
+  <div class="controls">
+    <div class="seg-group">
+      <button class="seg-btn active" id="btn-men" onclick="setGender('men')">남성</button>
+      <button class="seg-btn" id="btn-women" onclick="setGender('women')">여성</button>
+    </div>
+    <div class="seg-group">
+      <button class="seg-btn active" id="btn-jacket" onclick="setPart('jacket')">상의 (재킷)</button>
+      <button class="seg-btn" id="btn-breeches" onclick="setPart('breeches')">하의 (브리치)</button>
+    </div>
+  </div>
+
+  <!-- 내 사이즈 찾기 -->
+  <div class="finder-card">
+    <div class="finder-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      내 치수로 사이즈 찾기
+    </div>
+    <div class="finder-inputs" id="finder-inputs">
+      <div class="finder-group">
+        <label>키 (cm)</label>
+        <input type="number" id="inp-height" placeholder="예: 175" min="140" max="210">
+      </div>
+      <div class="finder-group" id="inp-chest-group">
+        <label>가슴둘레 (cm)</label>
+        <input type="number" id="inp-chest" placeholder="예: 96" min="60" max="140">
+      </div>
+      <div class="finder-group" id="inp-waist-group">
+        <label>허리둘레 (cm)</label>
+        <input type="number" id="inp-waist" placeholder="예: 84" min="50" max="130">
+      </div>
+      <div class="finder-group">
+        <button class="finder-btn" onclick="findSize()">찾기</button>
+      </div>
+    </div>
+    <div class="finder-result" id="finder-result"></div>
+  </div>
+
+  <!-- 노트 -->
+  <div class="note-card" id="note-card">
+    <strong>📏 측정 방법 및 주의사항</strong><br>
+    가슴둘레: 가장 넓은 부분을 수평으로 측정. 레온폴은 5cm 단위로 운동하기에 딱 맞게, 여유 있게 입으려면 한 사이즈 위 권장.<br>
+    네그리니는 <strong>최대 수용 신체치수</strong> 기준 — 표 치수보다 약간 작은 체형에 맞게 제작됩니다.<br>
+    같은 체형이라도 브랜드마다 핏이 다를 수 있으므로 가능하면 시착을 권장합니다.
+  </div>
+
+  <!-- 조견표 -->
+  <div class="table-wrap">
+    <div class="table-header">
+      <div>
+        <div class="table-title" id="table-title">남성 상의 (재킷) — 브랜드 사이즈 비교</div>
+        <div class="table-subtitle">알스타 기준 · 가슴둘레 매핑</div>
+      </div>
+      <div class="legend">
+        <span class="brand-badge brand-allstar">Allstar</span>
+        <span class="brand-badge brand-negrini">Negrini</span>
+        <span class="brand-badge brand-leonpaul">Leon Paul</span>
+        <span class="brand-badge brand-fw">FW</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="size-table">
+        <!-- JS로 채움 -->
+      </table>
+    </div>
+  </div>
+
+  <!-- 개별 브랜드 상세 -->
+  <div class="sec-div">브랜드별 원본 사이즈 상세</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="detail-tables">
+    <!-- JS로 채움 -->
+  </div>
+
+</div>
+
+<script>
+/* ─── 데이터 ─── */
+const DATA = {
+  men: {
+    jacket: {
+      title: '남성 상의 (재킷) — 브랜드 사이즈 비교',
+      subtitle: '알스타 기준 · 가슴둘레 매핑',
+      headers: ['알스타', '가슴(cm)', '허리(cm)', '키(cm)', '네그리니', '레온폴(Euro)', 'FW코리아'],
+      rows: [
+        { allstar:44, chest:'84–88', waist:'72–76', height:'164–170', negrini:'42',   lp:'46',  fw:'44' },
+        { allstar:46, chest:'88–92', waist:'76–80', height:'164–170', negrini:'44',   lp:'48',  fw:'46' },
+        { allstar:48, chest:'92–96', waist:'80–84', height:'170–176', negrini:'46',   lp:'50',  fw:'48' },
+        { allstar:50, chest:'96–100', waist:'84–88', height:'170–176', negrini:'46–48', lp:'50', fw:'50' },
+        { allstar:52, chest:'100–104', waist:'88–92', height:'176–182', negrini:'48',  lp:'52',  fw:'52' },
+        { allstar:54, chest:'104–108', waist:'92–96', height:'176–182', negrini:'50',  lp:'54',  fw:'54' },
+        { allstar:56, chest:'108–112', waist:'96–100', height:'176–182', negrini:'52', lp:'56',  fw:'56' },
+        { allstar:58, chest:'112–116', waist:'100–104', height:'182–188', negrini:'54', lp:'58', fw:'58' },
+        { allstar:60, chest:'116–120', waist:'104–108', height:'182–188', negrini:'56', lp:'60', fw:'60' },
+      ],
+      note: '레온폴 Euro 사이즈 = UK/USA 사이즈 + 10 (예: UK 38 = Euro 48)',
+      measureBy: 'chest',
+    },
+    breeches: {
+      title: '남성 하의 (브리치) — 브랜드 사이즈 비교',
+      subtitle: '알스타 기준 · 허리둘레 매핑',
+      headers: ['알스타', '가슴(cm)', '허리(cm)', '키(cm)', '네그리니', '레온폴(Euro)', 'FW코리아'],
+      rows: [
+        { allstar:44, chest:'84–88', waist:'72–76', height:'164–170', negrini:'42',   lp:'44', fw:'44' },
+        { allstar:46, chest:'88–92', waist:'76–80', height:'164–170', negrini:'44',   lp:'46', fw:'46' },
+        { allstar:48, chest:'92–96', waist:'80–84', height:'170–176', negrini:'46',   lp:'44', fw:'48' },
+        { allstar:50, chest:'96–100', waist:'84–88', height:'170–176', negrini:'46–48', lp:'46', fw:'50' },
+        { allstar:52, chest:'100–104', waist:'88–92', height:'176–182', negrini:'48', lp:'48', fw:'52' },
+        { allstar:54, chest:'104–108', waist:'92–96', height:'176–182', negrini:'50', lp:'50', fw:'54' },
+        { allstar:56, chest:'108–112', waist:'96–100', height:'176–182', negrini:'52', lp:'52', fw:'56' },
+        { allstar:58, chest:'112–116', waist:'100–104', height:'182–188', negrini:'54', lp:'—', fw:'58' },
+      ],
+      note: '레온폴 브리치는 허리둘레 기준. UK/USA 사이즈로도 표기됨 (Euro = UK+10)',
+      measureBy: 'waist',
+    },
+  },
+  women: {
+    jacket: {
+      title: '여성 상의 (재킷) — 브랜드 사이즈 비교',
+      subtitle: '알스타 기준 · 가슴둘레 매핑',
+      headers: ['알스타', '가슴(cm)', '허리(cm)', '키(cm)', '네그리니', '레온폴(Euro)', 'FW코리아'],
+      rows: [
+        { allstar:36, chest:'80–84', waist:'60–64', height:'164–170', negrini:'—',  lp:'38', fw:'36' },
+        { allstar:38, chest:'84–88', waist:'64–68', height:'164–170', negrini:'40', lp:'38–40', fw:'38' },
+        { allstar:40, chest:'88–92', waist:'68–72', height:'164–170', negrini:'42', lp:'40', fw:'40' },
+        { allstar:42, chest:'92–96', waist:'72–76', height:'164–170', negrini:'44', lp:'42', fw:'42' },
+        { allstar:44, chest:'96–100', waist:'76–80', height:'164–170', negrini:'46', lp:'44', fw:'44' },
+        { allstar:46, chest:'100–104', waist:'80–84', height:'164–170', negrini:'46–48', lp:'44', fw:'46' },
+        { allstar:48, chest:'104–108', waist:'84–88', height:'164–170', negrini:'48', lp:'46', fw:'48' },
+        { allstar:50, chest:'108–116', waist:'88–92', height:'164–170', negrini:'50', lp:'48', fw:'50' },
+      ],
+      note: '네그리니 여성 사이즈는 40–50까지만 제공. 레온폴 여성 Euro는 남성과 체계가 다름.',
+      measureBy: 'chest',
+    },
+    breeches: {
+      title: '여성 하의 (브리치) — 브랜드 사이즈 비교',
+      subtitle: '알스타 기준 · 허리둘레 매핑',
+      headers: ['알스타', '가슴(cm)', '허리(cm)', '키(cm)', '네그리니', '레온폴(Euro)', 'FW코리아'],
+      rows: [
+        { allstar:36, chest:'80–84', waist:'60–64', height:'164–170', negrini:'—',  lp:'36', fw:'36' },
+        { allstar:38, chest:'84–88', waist:'64–68', height:'164–170', negrini:'40', lp:'38', fw:'38' },
+        { allstar:40, chest:'88–92', waist:'68–72', height:'164–170', negrini:'40', lp:'40', fw:'40' },
+        { allstar:42, chest:'92–96', waist:'72–76', height:'164–170', negrini:'42', lp:'42', fw:'42' },
+        { allstar:44, chest:'96–100', waist:'76–80', height:'164–170', negrini:'44', lp:'44', fw:'44' },
+        { allstar:46, chest:'100–104', waist:'80–84', height:'164–170', negrini:'46', lp:'46', fw:'46' },
+        { allstar:48, chest:'104–108', waist:'84–88', height:'164–170', negrini:'48', lp:'48', fw:'48' },
+      ],
+      note: '여성 하의는 허리둘레 기준으로 맞추는 것이 가장 정확합니다.',
+      measureBy: 'waist',
+    },
+  },
+};
+
+/* 개별 브랜드 상세 데이터 */
+const DETAIL = {
+  men: {
+    jacket: [
+      {
+        brand: 'Allstar', cls: 'allstar',
+        title: '알스타 남성 상의 (Regular)',
+        cols: ['사이즈', '키(cm)', '가슴(cm)', '허리(cm)'],
+        rows: [
+          [44,'164–170','84–88','72–76'],
+          [46,'164–170','88–92','76–80'],
+          [48,'170–176','92–96','80–84'],
+          [50,'170–176','96–100','84–88'],
+          [52,'176–182','100–104','88–92'],
+          [54,'176–182','104–108','92–96'],
+          [56,'176–182','108–112','96–100'],
+          [58,'182–188','112–116','100–104'],
+          [60,'182–188','116–120','104–108'],
+        ]
+      },
+      {
+        brand: 'Negrini', cls: 'negrini',
+        title: '네그리니 남성 상의',
+        cols: ['사이즈', '키(cm)', '가슴(cm)', '허리(cm)'],
+        rows: [
+          [38,'135–142','88','68'],
+          [40,'142–152','90','70'],
+          [42,'152–159','92','72'],
+          [44,'160–164','96','76'],
+          [46,'164–170','98','80'],
+          [48,'170–176','104','86'],
+          [50,'172–178','106','92'],
+          [52,'176–182','110','96'],
+          [54,'182–186','116','100'],
+          [56,'186–190','120','102'],
+          [58,'188–192','126','104'],
+        ]
+      },
+      {
+        brand: 'Leon Paul', cls: 'leonpaul',
+        title: '레온폴 남성 재킷 (Regular)',
+        cols: ['Euro', 'UK/USA', '키(cm)', '가슴(cm)'],
+        rows: [
+          [44,34,'158–173','79–84'],
+          [46,36,'158–173','84–89'],
+          [48,38,'163–178','89–94'],
+          [50,40,'163–183','94–99'],
+          [52,42,'168–187','99–104'],
+          [54,44,'173–193','104–109'],
+          [56,46,'173–193','109–114'],
+          [58,48,'173–193','114–119'],
+          [60,50,'178–193','119–125'],
+        ]
+      },
+      {
+        brand: 'FencingWarehouse', cls: 'fw',
+        title: 'FW 코리아 남성 상의',
+        cols: ['사이즈', '키(cm)', '가슴(cm)', '허리(cm)'],
+        rows: [
+          [44,'164–170','84–88','72–76'],
+          [46,'164–172','88–92','76–80'],
+          [48,'170–176','92–96','80–84'],
+          [50,'170–176','96–100','84–88'],
+          [52,'176–182','100–104','88–92'],
+          [54,'176–182','104–108','92–96'],
+          [56,'176–182','108–112','96–100'],
+          [58,'182–188','112–116','100–104'],
+          [60,'182–188','116–120','104–108'],
+        ]
+      },
+    ],
+    breeches: [
+      {
+        brand: 'Allstar', cls: 'allstar',
+        title: '알스타 남성 하의 (Regular)',
+        cols: ['사이즈', '키(cm)', '가슴(cm)', '허리(cm)'],
+        rows: [
+          [44,'164–170','84–88','72–76'],
+          [46,'164–170','88–92','76–80'],
+          [48,'170–176','92–96','80–84'],
+          [50,'170–176','96–100','84–88'],
+          [52,'176–182','100–104','88–92'],
+          [54,'176–182','104–108','92–96'],
+          [56,'176–182','108–112','96–100'],
+          [58,'182–188','112–116','100–104'],
+        ]
+      },
+      {
+        brand: 'Leon Paul', cls: 'leonpaul',
+        title: '레온폴 남성 브리치 (Regular)',
+        cols: ['Euro', 'UK/USA', '허리(cm)'],
+        rows: [
+          [40,30,'69–74'],
+          [42,32,'74–79'],
+          [44,34,'79–84'],
+          [46,36,'84–89'],
+          [48,38,'89–94'],
+          [50,40,'94–99'],
+          [52,42,'99–104'],
+        ]
+      },
+    ],
+  },
+  women: {
+    jacket: [
+      {
+        brand: 'Allstar', cls: 'allstar',
+        title: '알스타 여성 상의 (Regular)',
+        cols: ['사이즈', '키(cm)', '가슴(cm)', '허리(cm)'],
+        rows: [
+          [34,'164–170','76–80','56–60'],
+          [36,'164–170','80–84','60–64'],
+          [38,'164–170','84–88','64–68'],
+          [40,'164–170','88–92','68–72'],
+          [42,'164–170','92–96','72–76'],
+          [44,'164–170','96–100','76–80'],
+          [46,'164–170','100–104','80–84'],
+          [48,'164–170','104–108','84–88'],
+          [50,'164–170','108–116','88–92'],
+        ]
+      },
+      {
+        brand: 'Negrini', cls: 'negrini',
+        title: '네그리니 여성 상의',
+        cols: ['사이즈', '키(cm)', '가슴(cm)', '허리(cm)'],
+        rows: [
+          [40,'150–158','94','70'],
+          [42,'158–164','96','72'],
+          [44,'160–166','98','76'],
+          [46,'162–168','104','80'],
+          [48,'165–170','108','84'],
+          [50,'168–175','110','90'],
+        ]
+      },
+      {
+        brand: 'Leon Paul', cls: 'leonpaul',
+        title: '레온폴 여성 재킷 (Regular)',
+        cols: ['Euro', 'UK/USA', '키(cm)', '가슴(cm)'],
+        rows: [
+          [36,34,'158–168','79–84'],
+          [38,36,'158–173','84–89'],
+          [40,38,'158–176','89–94'],
+          [42,40,'163–176','94–99'],
+          [44,42,'168–180','99–104'],
+          [46,44,'173–180','104–109'],
+          [48,46,'173–183','109–114'],
+          [50,48,'173–183','114–119'],
+        ]
+      },
+      {
+        brand: 'FencingWarehouse', cls: 'fw',
+        title: 'FW 코리아 여성 상의',
+        cols: ['사이즈', '키(cm)', '가슴(cm)', '허리(cm)'],
+        rows: [
+          [36,'164–170','80–84','60–64'],
+          [38,'164–170','84–88','64–68'],
+          [40,'164–170','88–92','68–72'],
+          [42,'164–170','92–96','72–76'],
+          [44,'164–170','96–100','76–80'],
+          [46,'164–170','100–104','80–84'],
+          [48,'164–170','104–108','84–88'],
+        ]
+      },
+    ],
+    breeches: [
+      {
+        brand: 'Allstar', cls: 'allstar',
+        title: '알스타 여성 하의 (Regular)',
+        cols: ['사이즈', '가슴(cm)', '허리(cm)', '엉덩이(cm)'],
+        rows: [
+          [34,'76–80','56–60','83–87'],
+          [36,'80–84','60–64','87–91'],
+          [38,'84–88','64–68','91–95'],
+          [40,'88–92','68–72','95–99'],
+          [42,'92–96','72–76','99–103'],
+          [44,'96–100','76–80','103–107'],
+          [46,'100–104','80–84','107–111'],
+        ]
+      },
+      {
+        brand: 'Leon Paul', cls: 'leonpaul',
+        title: '레온폴 여성 브리치 (Regular)',
+        cols: ['Euro', 'UK/USA', '허리(cm)'],
+        rows: [
+          [34,24,'54–59'],
+          [36,26,'59–64'],
+          [38,28,'64–69'],
+          [40,30,'69–74'],
+          [42,32,'74–79'],
+          [44,34,'79–84'],
+          [46,36,'84–89'],
+          [48,38,'89–94'],
+        ]
+      },
+    ],
+  },
+};
+
+/* ─── 상태 ─── */
+let currentGender = 'men';
+let currentPart = 'jacket';
+
+/* ─── 렌더링 ─── */
+function render() {
+  const data = DATA[currentGender][currentPart];
+  document.getElementById('table-title').textContent = data.title;
+
+  // 메인 비교표
+  const t = document.getElementById('size-table');
+  t.innerHTML = `
+    <thead>
+      <tr>
+        <th class="col-allstar">Allstar<br><small>(기준)</small></th>
+        <th>가슴(cm)</th>
+        <th>허리(cm)</th>
+        <th>키(cm)</th>
+        <th class="col-negrini">Negrini</th>
+        <th class="col-leonpaul">Leon Paul<br><small>(Euro)</small></th>
+        <th class="col-fw">FW 코리아</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.rows.map(r => `
+        <tr>
+          <td class="allstar-size">${r.allstar}</td>
+          <td class="measurement">${r.chest}</td>
+          <td class="measurement">${r.waist}</td>
+          <td class="measurement">${r.height}</td>
+          <td class="negrini-size">${r.negrini}</td>
+          <td class="leonpaul-size">${r.lp}</td>
+          <td class="fw-size">${r.fw}</td>
+        </tr>`).join('')}
+    </tbody>`;
+
+  // 노트 업데이트
+  document.getElementById('note-card').innerHTML = `<strong>📏 주의사항</strong><br>${data.note}<br><br>
+    <strong>측정 방법:</strong> ${data.measureBy === 'chest'
+      ? '가슴둘레 — 가장 넓은 부분을 수평으로 측정. 숨을 들이쉰 상태에서 측정.'
+      : '허리둘레 — 자연스러운 허리선을 수평으로 측정.'}
+    네그리니는 최대 수용 신체치수 기준입니다. 레온폴은 딱 맞게 입으려면 측정 사이즈대로, 여유있게 입으려면 한 사이즈 업 권장.`;
+
+  // 상세 표
+  const detail = DETAIL[currentGender][currentPart];
+  const detailEl = document.getElementById('detail-tables');
+  detailEl.innerHTML = detail.map(d => `
+    <div class="table-wrap">
+      <div class="table-header">
+        <div>
+          <div class="table-title" style="font-size:15px">${d.title}</div>
+        </div>
+        <span class="brand-badge brand-${d.cls}">${d.brand}</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>${d.cols.map(c => `<th>${c}</th>`).join('')}</tr>
+          </thead>
+          <tbody>
+            ${d.rows.map(r => `<tr>${r.map((v,i) => `<td class="${i===0 ? d.cls+'-size' : 'measurement'}">${v}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`).join('');
+}
+
+/* ─── 사이즈 찾기 ─── */
+function findSize() {
+  const height = parseFloat(document.getElementById('inp-height').value);
+  const chest  = parseFloat(document.getElementById('inp-chest').value);
+  const waist  = parseFloat(document.getElementById('inp-waist').value);
+  const result = document.getElementById('finder-result');
+  const data   = DATA[currentGender][currentPart];
+
+  if (!chest && !waist) {
+    result.innerHTML = '가슴둘레 또는 허리둘레를 입력해주세요.';
+    result.classList.add('show');
+    return;
+  }
+
+  // 가장 적합한 알스타 사이즈 찾기
+  const measure = data.measureBy === 'chest' ? chest : waist;
+  let best = null, bestScore = Infinity;
+
+  data.rows.forEach(r => {
+    const range = data.measureBy === 'chest' ? r.chest : r.waist;
+    const [lo, hi] = range.replace('–', '-').split('-').map(Number);
+    const mid = (lo + hi) / 2;
+    // 범위 내에 있으면 베스트
+    if (measure >= lo && measure <= hi) {
+      best = r;
+      bestScore = 0;
+    } else if (bestScore > 0) {
+      const score = Math.min(Math.abs(measure - lo), Math.abs(measure - hi));
+      if (score < bestScore) { bestScore = score; best = r; }
+    }
+  });
+
+  if (!best) {
+    result.innerHTML = '범위를 벗어난 치수예요. 직접 브랜드에 문의하세요.';
+    result.classList.add('show');
+    return;
+  }
+
+  const heightNote = height && (height < parseInt(best.height) || height > parseInt(best.height.split('–')[1]))
+    ? ` <span style="color:var(--amber)">(키 ${height}cm — tall/stocky 사이즈 확인 권장)</span>` : '';
+
+  result.innerHTML = `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">입력 치수 기준 추천 사이즈${heightNote}</div>
+    <div class="result-row">
+      <div class="result-item">
+        <span class="brand-badge brand-allstar">Allstar</span>
+        <span style="font-size:20px;font-weight:700;color:var(--allstar)">${best.allstar}</span>
+      </div>
+      <span style="color:var(--muted)">→</span>
+      <div class="result-item">
+        <span class="brand-badge brand-negrini">Negrini</span>
+        <span style="font-size:18px;font-weight:600;color:var(--negrini)">${best.negrini}</span>
+      </div>
+      <div class="result-item">
+        <span class="brand-badge brand-leonpaul">Leon Paul</span>
+        <span style="font-size:18px;font-weight:600;color:var(--leonpaul)">${best.lp} <span style="font-size:12px;font-weight:400">(Euro)</span></span>
+      </div>
+      <div class="result-item">
+        <span class="brand-badge brand-fw">FW 코리아</span>
+        <span style="font-size:18px;font-weight:600;color:var(--fw)">${best.fw}</span>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:var(--muted)">신체치수 범위: 가슴 ${best.chest} · 허리 ${best.waist} · 키 ${best.height}</div>`;
+  result.classList.add('show');
+}
+
+function setGender(g) {
+  currentGender = g;
+  document.getElementById('btn-men').classList.toggle('active', g === 'men');
+  document.getElementById('btn-women').classList.toggle('active', g === 'women');
+  document.getElementById('finder-result').classList.remove('show');
+  render();
+}
+function setPart(p) {
+  currentPart = p;
+  document.getElementById('btn-jacket').classList.toggle('active', p === 'jacket');
+  document.getElementById('btn-breeches').classList.toggle('active', p === 'breeches');
+  document.getElementById('finder-result').classList.remove('show');
+  render();
+}
+
+// 엔터키
+document.addEventListener('DOMContentLoaded', () => {
+  ['inp-height','inp-chest','inp-waist'].forEach(id => {
+    document.getElementById(id)?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') findSize();
+    });
+  });
+  render();
+});
+</script>
+</body>
+</html>
