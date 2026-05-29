@@ -482,9 +482,10 @@ async function loadReddit() {
   try {
     const sort = currentSort === 'top' ? 'top' : 'new';
     const target = `https://www.reddit.com/r/fencing/${sort}.json?limit=40&t=month`;
-    const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(target)}`, { cache: 'no-store' });
+    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`);
     if (!res.ok) throw new Error('Reddit API ' + res.status);
-    const data = await res.json();
+    const wrapper = await res.json();
+    const data = JSON.parse(wrapper.contents);
     const posts = data.data.children.map(c => c.data)
       .filter(p => !p.stickied && (
         p.post_hint === 'image' ||
