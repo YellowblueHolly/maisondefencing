@@ -481,11 +481,9 @@ async function loadAll() {
 async function loadReddit() {
   try {
     const sort = currentSort === 'top' ? 'top' : 'new';
-    const target = `https://www.reddit.com/r/fencing/${sort}.json?limit=40&t=month`;
-    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`);
-    if (!res.ok) throw new Error('Reddit API ' + res.status);
-    const wrapper = await res.json();
-    const data = JSON.parse(wrapper.contents);
+    const res = await fetch(`https://www.reddit.com/r/fencing/${sort}.json?limit=40&t=month`);
+    if (!res.ok) throw new Error('Reddit ' + res.status);
+    const data = await res.json();
     const posts = data.data.children.map(c => c.data)
       .filter(p => !p.stickied && (
         p.post_hint === 'image' ||
@@ -509,6 +507,7 @@ async function loadReddit() {
     console.log(`Reddit: ${items.length}개 로드됨`);
   } catch(e) { console.warn('Reddit load failed:', e); }
 }
+
 
 async function loadUserMemes() {
   try {
