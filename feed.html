@@ -481,7 +481,7 @@ async function loadAll() {
 async function loadReddit() {
   try {
     const sort = currentSort === 'top' ? 'top' : 'new';
-    const rssUrl = `https://www.reddit.com/r/fencing/${sort}/.rss?t=month`;
+    const rssUrl = `https://www.reddit.com/r/fencing/${sort}.rss?t=month`;
     const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=40`;
     const res = await fetch(apiUrl);
     if (!res.ok) throw new Error('rss2json ' + res.status);
