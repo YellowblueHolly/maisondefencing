@@ -481,7 +481,8 @@ async function loadAll() {
 async function loadReddit() {
   try {
     const sort = currentSort === 'top' ? 'top' : 'new';
-    const res = await fetch(`https://www.reddit.com/r/fencing/${sort}.json?limit=40&t=month`);
+    // old.reddit.com은 CORS 허용이 더 넓음
+    const res = await fetch(`https://old.reddit.com/r/fencing/${sort}.json?limit=40&t=month&raw_json=1`);
     if (!res.ok) throw new Error('Reddit ' + res.status);
     const data = await res.json();
     const posts = data.data.children.map(c => c.data)

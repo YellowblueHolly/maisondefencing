@@ -524,18 +524,8 @@
       </div>
       <div class="stat-div"></div>
       <div class="stat">
-        <div class="stat-n" id="stat-clubs">94</div>
+        <div class="stat-n" id="stat-clubs">104</div>
         <div class="stat-l">등록 클럽</div>
-      </div>
-      <div class="stat-div"></div>
-      <div class="stat">
-        <div class="stat-n" id="stat-posts">1.2k</div>
-        <div class="stat-l">게시글</div>
-      </div>
-      <div class="stat-div"></div>
-      <div class="stat">
-        <div class="stat-n" id="stat-members">320</div>
-        <div class="stat-l">회원</div>
       </div>
     </div>
   </div>
@@ -702,7 +692,7 @@ async function loadMemes() {
   const grid = document.getElementById('meme-grid');
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;font-size:12px;color:var(--muted)">로딩 중...</div>';
   try {
-    const res = await fetch('https://www.reddit.com/r/fencing/top.json?limit=30&t=week');
+    const res = await fetch('https://old.reddit.com/r/fencing/top.json?limit=30&t=week&raw_json=1');
     if (!res.ok) throw new Error('Reddit ' + res.status);
     const data = await res.json();
     const posts = data.data.children.map(c => c.data)
