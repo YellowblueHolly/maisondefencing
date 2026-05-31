@@ -479,40 +479,50 @@ async function loadAll() {
 }
 
 async function loadReddit() {
-  try {
-    const sort = currentSort === 'top' ? 'top' : 'new';
-    const rssUrl = `https://www.reddit.com/r/fencing/${sort}.rss?t=month`;
-    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=40`;
-    const res = await fetch(apiUrl);
-    if (!res.ok) throw new Error('rss2json ' + res.status);
-    const data = await res.json();
-    if (data.status !== 'ok') throw new Error('RSS 실패');
+  const BASE = 'https://www.reddit.com/r/fencing/top.json?limit=40&t=week';
+  const ATTEMPTS = [
+    BASE,
+    `https://corsproxy.io/?${encodeURIComponent(BASE)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(BASE)}`,
+    `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(BASE)}`,
+  ];
 
-    const items = data.items.map(item => {
-      // 썸네일 추출: thumbnail 필드 → description 내 img src 순서로 시도
-      let thumb = (item.thumbnail && item.thumbnail.startsWith('http')) ? item.thumbnail : '';
-      if (!thumb && item.description) {
-        const m = item.description.match(/src="(https?:\/\/[^"]+\.(jpg|jpeg|png|gif|webp)[^"]*)"/i);
-        if (m) thumb = m[1];
-      }
-      if (!thumb && item.enclosure?.link) thumb = item.enclosure.link;
-      return {
-        id: 'reddit-' + item.guid?.slice(-10),
+  for (const url of ATTEMPTS) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 5000);
+      const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+      clearTimeout(tid);
+      if (!res.ok) { console.warn('Reddit attempt failed:', url, res.status); continue; }
+      const text = await res.text();
+      // allorigins /get wrapper 대응
+      const raw = text.startsWith('{"contents"') ? JSON.parse(text).contents : text;
+      const data = JSON.parse(raw);
+      const posts = data.data.children.map(c => c.data)
+        .filter(p => !p.stickied && (
+          p.post_hint === 'image' ||
+          p.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+          p.preview?.images?.length > 0
+        ));
+      const items = posts.map(p => ({
+        id: 'reddit-' + p.id,
         source: 'reddit',
         type: 'image',
-        title: item.title,
-        thumbnail: thumb,
-        url: item.link,
+        title: p.title,
+        thumbnail: p.preview?.images?.[0]?.resolutions?.[1]?.url?.replace(/&amp;/g,'&')
+                || p.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&') || '',
+        url: 'https://reddit.com' + p.permalink,
         author: 'r/fencing',
-        likes: 0,
-        date: item.pubDate,
-      };
-    }).filter(i => i.thumbnail); // 썸네일 있는 것만
-
-    console.log(`Reddit RSS: ${data.items.length}개 중 ${items.length}개 이미지 포함`);
-    allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
-    allItems.push(...items);
-  } catch(e) { console.warn('Reddit load failed:', e); }
+        likes: p.score,
+        date: new Date(p.created_utc * 1000).toISOString(),
+      }));
+      allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
+      allItems.push(...items);
+      console.log(`Reddit: ${items.length}개 로드됨 (via ${url.startsWith('https://www.reddit') ? 'direct' : new URL(url).hostname})`);
+      return; // 성공하면 종료
+    } catch(e) { console.warn('Reddit attempt error:', e.message); continue; }
+  }
+  console.warn('Reddit: 모든 시도 실패');
 }
 
 
