@@ -486,24 +486,32 @@ async function loadReddit() {
     const res = await fetch(apiUrl);
     if (!res.ok) throw new Error('rss2json ' + res.status);
     const data = await res.json();
-    if (data.status !== 'ok') throw new Error('RSS 파싱 실패');
+    if (data.status !== 'ok') throw new Error('RSS 실패');
 
-    const items = data.items
-      .filter(item => item.thumbnail && item.thumbnail.startsWith('http'))
-      .map(item => ({
-        id: 'reddit-' + encodeURIComponent(item.link).slice(-12),
+    const items = data.items.map(item => {
+      // 썸네일 추출: thumbnail 필드 → description 내 img src 순서로 시도
+      let thumb = (item.thumbnail && item.thumbnail.startsWith('http')) ? item.thumbnail : '';
+      if (!thumb && item.description) {
+        const m = item.description.match(/src="(https?:\/\/[^"]+\.(jpg|jpeg|png|gif|webp)[^"]*)"/i);
+        if (m) thumb = m[1];
+      }
+      if (!thumb && item.enclosure?.link) thumb = item.enclosure.link;
+      return {
+        id: 'reddit-' + item.guid?.slice(-10),
         source: 'reddit',
         type: 'image',
         title: item.title,
-        thumbnail: item.thumbnail,
+        thumbnail: thumb,
         url: item.link,
         author: 'r/fencing',
         likes: 0,
         date: item.pubDate,
-      }));
+      };
+    }).filter(i => i.thumbnail); // 썸네일 있는 것만
+
+    console.log(`Reddit RSS: ${data.items.length}개 중 ${items.length}개 이미지 포함`);
     allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
     allItems.push(...items);
-    console.log(`Reddit: ${items.length}개 로드됨`);
   } catch(e) { console.warn('Reddit load failed:', e); }
 }
 
