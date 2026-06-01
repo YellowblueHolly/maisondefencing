@@ -6,15 +6,6 @@
 <title>클럽 찾기 — 메종드펜싱</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
-<!-- 카카오맵 SDK: KAKAO_API_KEY 를 본인 키로 교체 -->
-<script>
-  const KAKAO_APP_KEY = '8f26432a2cbd83671d57914e6ba15e42';
-  if (KAKAO_APP_KEY !== 'YOUR_KAKAO_APP_KEY') {
-    const s = document.createElement('script');
-    s.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_APP_KEY}&autoload=false&libraries=clusterer,services`;
-    document.head.appendChild(s);
-  }
-</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -31,7 +22,6 @@
   body { font-family: var(--font-body); background: var(--cream); color: var(--ink); font-size: 14px; }
   a { text-decoration: none; color: inherit; }
 
-  /* Nav */
   .nav { background: var(--paper); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 200; }
   .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; height: 56px; display: flex; align-items: center; }
   .nav-logo { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: 2px; margin-right: 36px; }
@@ -41,26 +31,13 @@
   .nav-links a:hover { background: var(--cream); color: var(--ink); }
   .nav-links a.active { background: var(--cream); color: var(--ink); font-weight: 500; }
 
-  /* Layout: sidebar + map */
   .layout { display: flex; height: calc(100vh - 56px); }
 
-  /* Left sidebar */
-  .sidebar {
-    width: 380px;
-    flex-shrink: 0;
-    background: var(--paper);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  /* Sidebar header */
+  .sidebar { width: 380px; flex-shrink: 0; background: var(--paper); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
   .sidebar-top { padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .sidebar-top h2 { font-family: var(--font-display); font-size: 20px; font-weight: 500; letter-spacing: 1px; }
   .sidebar-top p { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
-  /* Search + filters */
   .filter-wrap { padding: 12px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
   .search-box { display: flex; align-items: center; gap: 8px; padding: 0 12px; height: 38px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--cream); }
   .search-box input { flex: 1; border: none; background: transparent; font-family: var(--font-body); font-size: 13px; color: var(--ink); outline: none; }
@@ -76,34 +53,13 @@
   .chip-sabre.active  { background: var(--red); }
   .chip-region.active { background: var(--ink); }
 
-  /* Club list */
   .club-list { flex: 1; overflow-y: auto; }
   .club-list::-webkit-scrollbar { width: 4px; }
   .club-list::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
 
-  .region-header {
-    padding: 8px 20px 4px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    position: sticky;
-    top: 0;
-    background: var(--paper);
-    border-bottom: 1px solid var(--border);
-    z-index: 10;
-  }
+  .region-header { padding: 8px 20px 4px; font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; position: sticky; top: 0; background: var(--paper); border-bottom: 1px solid var(--border); z-index: 10; }
 
-  .club-item {
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background .12s;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-  }
+  .club-item { padding: 12px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; display: flex; align-items: flex-start; gap: 12px; }
   .club-item:hover { background: var(--cream); }
   .club-item.selected { background: #EFF4FC; border-left: 3px solid var(--blue); padding-left: 17px; }
   .club-num { font-size: 11px; color: var(--muted); min-width: 22px; text-align: right; padding-top: 2px; }
@@ -118,43 +74,16 @@
 
   .empty-state { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px; }
 
-  /* Stats bar */
   .stats-bar { padding: 8px 20px; border-top: 1px solid var(--border); flex-shrink: 0; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
   .stats-bar strong { color: var(--ink); }
   .view-toggle { display: flex; gap: 4px; }
   .view-btn { padding: 3px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--muted); cursor: pointer; font-family: var(--font-body); transition: all .15s; }
   .view-btn.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
 
-  /* Map */
   .map-area { flex: 1; position: relative; background: var(--faint); }
   #map { width: 100%; height: 100%; }
 
-  /* No map fallback */
-  .map-placeholder {
-    width: 100%; height: 100%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 16px; text-align: center; padding: 40px;
-  }
-  .map-placeholder svg { opacity: 0.2; }
-  .map-placeholder h3 { font-family: var(--font-display); font-size: 22px; font-weight: 400; }
-  .map-placeholder p { font-size: 13px; color: var(--muted); line-height: 1.7; }
-  .map-placeholder code { font-size: 12px; background: var(--faint); padding: 2px 8px; border-radius: 4px; }
-
-  /* Club detail popup (map overlay) */
-  .club-popup {
-    position: absolute;
-    bottom: 32px; left: 50%; transform: translateX(-50%);
-    background: var(--paper);
-    border: 1px solid var(--border-strong);
-    border-radius: 12px;
-    padding: 16px 20px;
-    min-width: 280px;
-    max-width: 360px;
-    display: none;
-    z-index: 100;
-    box-shadow: 0 4px 24px rgba(28,26,23,0.12);
-  }
+  .club-popup { position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); background: var(--paper); border: 1px solid var(--border-strong); border-radius: 12px; padding: 16px 20px; min-width: 280px; max-width: 360px; display: none; z-index: 100; box-shadow: 0 4px 24px rgba(28,26,23,0.12); }
   .club-popup.show { display: block; }
   .popup-close { position: absolute; top: 10px; right: 12px; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; }
   .popup-name { font-size: 15px; font-weight: 500; padding-right: 20px; }
@@ -173,11 +102,11 @@
   <div class="nav-inner">
     <a href="index.html" class="nav-logo">MAISON <em>de</em> FENCING</a>
     <div class="nav-links">
-      <a href="index.html" >홈</a>
-      <a href="rules.html" >규정 검색</a>
-      <a href="board.html" >게시판</a>
-      <a href="feed.html" >펜싱 피드</a>
-      <a href="sites.html" >사이트 모음</a>
+      <a href="index.html">홈</a>
+      <a href="rules.html">규정 검색</a>
+      <a href="board.html">게시판</a>
+      <a href="feed.html">펜싱 피드</a>
+      <a href="sites.html">사이트 모음</a>
       <a href="clubs.html" class="active">클럽 찾기</a>
       <a href="sizing.html">사이즈 조견표</a>
     </div>
@@ -185,13 +114,11 @@
 </nav>
 
 <div class="layout">
-  <!-- Left sidebar -->
   <div class="sidebar">
     <div class="sidebar-top">
       <h2>전국 펜싱클럽</h2>
       <p id="sidebar-desc">2026년 5월 기준 · 펜싱여지도 데이터</p>
     </div>
-
     <div class="filter-wrap">
       <div class="search-box">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -205,12 +132,9 @@
       </div>
       <div class="filter-row" id="region-chips">
         <span style="font-size:11px;color:var(--muted);align-self:center">지역</span>
-        <!-- JS로 채움 -->
       </div>
     </div>
-
     <div class="club-list" id="club-list"></div>
-
     <div class="stats-bar">
       <span id="stats-text">로딩 중...</span>
       <div class="view-toggle">
@@ -220,22 +144,8 @@
     </div>
   </div>
 
-  <!-- Map -->
   <div class="map-area">
     <div id="map"></div>
-    <div class="map-placeholder" id="map-placeholder" style="display:none">
-      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
-      <h3>지도를 활성화하려면</h3>
-      <p>
-        <a href="https://developers.kakao.com" target="_blank" style="color:var(--blue)">developers.kakao.com</a>에서<br>
-        JavaScript 앱 키를 발급받은 뒤<br>
-        <code>clubs.html</code> 상단의<br>
-        <code>KAKAO_APP_KEY</code>를 교체해주세요.<br><br>
-        지금은 좌측 목록으로 클럽을 확인할 수 있어요.
-      </p>
-    </div>
-
-    <!-- 클럽 상세 팝업 -->
     <div class="club-popup" id="club-popup">
       <button class="popup-close" onclick="closePopup()">×</button>
       <div class="popup-name" id="popup-name"></div>
@@ -251,8 +161,8 @@
 </div>
 
 <script>
-const WEAPON_LABEL = { '에페': '에페', '플뢰레': '플뢰레', '사브르': '사브르' };
-const WEAPON_TAG   = { '에페': 'tag-epee', '플뢰레': 'tag-foil', '사브르': 'tag-sabre' };
+const KAKAO_APP_KEY = '8f26432a2cbd83671d57914e6ba15e42';
+const WEAPON_TAG = { '에페': 'tag-epee', '플뢰레': 'tag-foil', '사브르': 'tag-sabre' };
 const REGIONS = ['서울','경기남부','경기서부/인천','경기북부','경기동부','강원','충청/대전','경상권/부산','전라권','제주'];
 
 let allClubs = [];
@@ -265,43 +175,63 @@ let markers = [];
 let selectedClub = null;
 let map = null;
 let clusterer = null;
-let currentView = 'map';
 
-// ── 데이터 로드 ──
+// ── 카카오맵 SDK를 Promise로 로드 ──
+function loadKakaoSDK() {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_APP_KEY}&autoload=false&libraries=clusterer,services`;
+    s.onload = () => {
+      kakao.maps.load(() => resolve());
+    };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
 async function init() {
-  const res = await fetch('clubs_db.json');
-  allClubs = await res.json();
+  try {
+    const res = await fetch('clubs_db.json');
+    allClubs = await res.json();
+  } catch(e) {
+    document.getElementById('club-list').innerHTML = '<div class="empty-state">클럽 데이터를 불러오지 못했어요</div>';
+    return;
+  }
 
   buildRegionChips();
   applyFilter();
 
-  // 카카오맵 로드 확인
-  if (KAKAO_APP_KEY !== 'YOUR_KAKAO_APP_KEY') {
-    kakao.maps.load(initMap);
-  } else {
-    document.getElementById('map').style.display = 'none';
-    document.getElementById('map-placeholder').style.display = 'flex';
+  // 카카오맵 로드
+  try {
+    await loadKakaoSDK();
+    kakaoLoaded = true;
+    initMap();
+  } catch(e) {
+    console.warn('카카오맵 로드 실패:', e);
   }
 }
 
 function buildRegionChips() {
   const wrap = document.getElementById('region-chips');
+  const labelMap = {
+    '경기남부': '경기남부', '경기서부/인천': '서부/인천',
+    '경기북부': '경기북부', '경기동부': '경기동부',
+  };
   REGIONS.forEach(r => {
     const btn = document.createElement('button');
     btn.className = 'chip chip-region';
-    btn.textContent = r === '경기남부' ? '경기남부' : r === '경기서부/인천' ? '서부/인천' :
-                      r === '경기북부' ? '경기북부' : r === '경기동부' ? '경기동부' : r;
+    btn.textContent = labelMap[r] || r;
     btn.dataset.region = r;
     btn.onclick = () => toggleRegion(r);
     wrap.appendChild(btn);
   });
 }
 
-// ── 필터 ──
 function toggleWeapon(w) {
   if (selectedWeapons.has(w)) selectedWeapons.delete(w);
   else selectedWeapons.add(w);
-  document.getElementById('chip-' + (w==='에페'?'epee':w==='플뢰레'?'foil':'sabre')).classList.toggle('active');
+  const id = { '에페':'epee', '플뢰레':'foil', '사브르':'sabre' }[w];
+  document.getElementById('chip-' + id).classList.toggle('active');
   applyFilter();
 }
 
@@ -325,7 +255,7 @@ function applyFilter() {
   document.getElementById('stats-text').innerHTML = `<strong>${filtered.length}</strong>개 클럽`;
 }
 
-// ── 리스트 렌더링 ──
+// ── 리스트 렌더링 — 번호는 filtered 기준 순번 ──
 function renderList() {
   const wrap = document.getElementById('club-list');
   if (filtered.length === 0) {
@@ -333,25 +263,29 @@ function renderList() {
     return;
   }
 
-  // 지역별 그룹
   const groups = {};
   filtered.forEach(c => {
     if (!groups[c.region]) groups[c.region] = [];
     groups[c.region].push(c);
   });
 
+  // 전체 filtered 기준 순번 매핑
+  const numMap = {};
+  let n = 1;
+  REGIONS.forEach(r => {
+    (groups[r] || []).forEach(c => { numMap[c.id] = n++; });
+  });
+
   let html = '';
   REGIONS.forEach(r => {
     if (!groups[r]) return;
     html += `<div class="region-header">${r} <span style="font-weight:400;opacity:.6">${groups[r].length}</span></div>`;
-    groups[r].forEach((c, i) => {
-      const tags = c.weapons.map(w =>
-        `<span class="weapon-tag ${WEAPON_TAG[w] || ''}">${w}</span>`
-      ).join('');
+    groups[r].forEach(c => {
+      const tags = c.weapons.map(w => `<span class="weapon-tag ${WEAPON_TAG[w] || ''}">${w}</span>`).join('');
       const sel = selectedClub?.id === c.id ? ' selected' : '';
       html += `
         <div class="club-item${sel}" onclick="selectClub(${c.id})" id="item-${c.id}">
-          <span class="club-num">${allClubs.indexOf(c)+1}</span>
+          <span class="club-num">${numMap[c.id]}</span>
           <div class="club-info">
             <div class="club-name">${c.name}</div>
             <div class="club-addr">
@@ -367,15 +301,13 @@ function renderList() {
   wrap.innerHTML = html;
 }
 
-// ── 클럽 선택 ──
 function selectClub(id) {
   selectedClub = allClubs.find(c => c.id === id);
   document.querySelectorAll('.club-item').forEach(el => el.classList.remove('selected'));
   const el = document.getElementById('item-' + id);
   if (el) { el.classList.add('selected'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
-
   showPopup(selectedClub);
-  if (kakaoLoaded && map) {
+  if (kakaoLoaded && map && selectedClub.lat) {
     map.setCenter(new kakao.maps.LatLng(selectedClub.lat, selectedClub.lng));
     map.setLevel(4);
   }
@@ -390,7 +322,6 @@ function showPopup(c) {
   const noteEl = document.getElementById('popup-note');
   noteEl.textContent = c.note || '';
   noteEl.style.display = c.note ? 'block' : 'none';
-
   const telBtn = document.getElementById('popup-tel');
   if (c.tel) {
     telBtn.textContent = '📞 ' + c.tel;
@@ -399,7 +330,6 @@ function showPopup(c) {
   } else {
     telBtn.style.display = 'none';
   }
-
   document.getElementById('club-popup').classList.add('show');
 }
 
@@ -415,15 +345,13 @@ function openKakaoMap() {
   window.open(`https://map.kakao.com/link/search/${q}`, '_blank');
 }
 
-// ── 카카오맵 ──
+// ── 카카오맵 초기화 ──
 function initMap() {
-  kakaoLoaded = true;
   const container = document.getElementById('map');
   map = new kakao.maps.Map(container, {
     center: new kakao.maps.LatLng(36.5, 127.8),
     level: 13,
   });
-
   clusterer = new kakao.maps.MarkerClusterer({
     map, averageCenter: true, minLevel: 6,
     styles: [{
@@ -433,15 +361,12 @@ function initMap() {
       lineHeight: '48px', fontSize: '14px', fontFamily: "'Noto Sans KR', sans-serif",
     }],
   });
-
   geocodeAll();
 }
 
-// ── 지오코딩 (주소 → 좌표 자동 변환) ──
 const CACHE_KEY = 'mdf_geocode_v3';
 
 async function geocodeAll() {
-  // 캐시 확인
   let cache = {};
   try { cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); } catch(e) {}
 
@@ -449,65 +374,43 @@ async function geocodeAll() {
   const needsGeocode = allClubs.filter(c => !cache[c.id]);
 
   if (needsGeocode.length === 0) {
-    // 전부 캐시에 있음
     allClubs.forEach(c => { if (cache[c.id]) { c.lat = cache[c.id].lat; c.lng = cache[c.id].lng; } });
-    applyFilter();
     updateMarkers();
     return;
   }
 
-  // 진행 상황 표시
   document.getElementById('sidebar-desc').textContent = `좌표 변환 중... (0/${needsGeocode.length})`;
-
   let done = 0;
-  const DELAY = 100; // ms between requests (rate limit 방지)
 
   for (const club of needsGeocode) {
     await new Promise(resolve => {
       setTimeout(() => {
         geocoder.addressSearch(club.address, (result, status) => {
           if (status === kakao.maps.services.Status.OK && result[0]) {
-            const lat = parseFloat(result[0].y);
-            const lng = parseFloat(result[0].x);
-            club.lat = lat;
-            club.lng = lng;
-            cache[club.id] = { lat, lng };
+            club.lat = parseFloat(result[0].y);
+            club.lng = parseFloat(result[0].x);
+            cache[club.id] = { lat: club.lat, lng: club.lng };
           }
           done++;
-          document.getElementById('sidebar-desc').textContent =
-            `좌표 변환 중... (${done}/${needsGeocode.length})`;
+          document.getElementById('sidebar-desc').textContent = `좌표 변환 중... (${done}/${needsGeocode.length})`;
           resolve();
         });
-      }, done * DELAY);
+      }, done * 100);
     });
   }
 
-  // 캐시에 이미 있는 것도 적용
   allClubs.forEach(c => { if (cache[c.id]) { c.lat = cache[c.id].lat; c.lng = cache[c.id].lng; } });
-
-  // 캐시 저장
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch(e) {}
-
   document.getElementById('sidebar-desc').textContent = '2026년 5월 기준 · 펜싱여지도 데이터';
-  applyFilter();
   updateMarkers();
 }
 
-const WEAPON_COLORS = {
-  '에페':   '#1A6B5A',
-  '플뢰레': '#1A4A7A',
-  '사브르': '#C0392B',
-  'mixed':  '#5A4A3A',
-};
+const WEAPON_COLORS = { '에페':'#1A6B5A', '플뢰레':'#1A4A7A', '사브르':'#C0392B', mixed:'#5A4A3A' };
 
 function makeMarkerSVG(weapons) {
   const color = weapons.length > 1 ? WEAPON_COLORS.mixed : (WEAPON_COLORS[weapons[0]] || '#1C1A17');
   const label = weapons.length > 1 ? '복' : { '에페':'에','플뢰레':'플','사브르':'사' }[weapons[0]] || '펜';
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
-    <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
-      <path d="M16 0C7.163 0 0 7.163 0 16c0 10 16 24 16 24S32 26 32 16C32 7.163 24.837 0 16 0z" fill="${color}"/>
-      <text x="16" y="20" text-anchor="middle" dominant-baseline="central" font-size="12" font-family="Noto Sans KR, sans-serif" fill="white" font-weight="500">${label}</text>
-    </svg>`)}`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg"><path d="M16 0C7.163 0 0 7.163 0 16c0 10 16 24 16 24S32 26 32 16C32 7.163 24.837 0 16 0z" fill="${color}"/><text x="16" y="20" text-anchor="middle" dominant-baseline="central" font-size="12" font-family="Noto Sans KR, sans-serif" fill="white" font-weight="500">${label}</text></svg>`)}`;
 }
 
 function updateMarkers() {
@@ -515,30 +418,24 @@ function updateMarkers() {
   markers.forEach(m => m.setMap(null));
   markers = [];
   clusterer.clear();
-
-  const newMarkers = filtered.map(c => {
-    const imgSrc = makeMarkerSVG(c.weapons.length ? c.weapons : ['mixed']);
-    const markerImg = new kakao.maps.MarkerImage(imgSrc, new kakao.maps.Size(32, 40));
+  const newMarkers = filtered.filter(c => c.lat).map(c => {
     const marker = new kakao.maps.Marker({
       position: new kakao.maps.LatLng(c.lat, c.lng),
-      image: markerImg,
+      image: new kakao.maps.MarkerImage(makeMarkerSVG(c.weapons.length ? c.weapons : ['mixed']), new kakao.maps.Size(32, 40)),
       title: c.name,
     });
     kakao.maps.event.addListener(marker, 'click', () => selectClub(c.id));
     return marker;
   });
-
   markers = newMarkers;
   clusterer.addMarkers(newMarkers);
 }
 
 function setView(v) {
-  currentView = v;
   document.getElementById('view-map').classList.toggle('active', v === 'map');
   document.getElementById('view-list').classList.toggle('active', v === 'list');
 }
 
-// ── 검색 ──
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('search').addEventListener('input', e => {
     searchQ = e.target.value.trim();
