@@ -164,12 +164,12 @@
   <div class="nav-inner">
     <a href="index.html" class="nav-logo">MAISON <em>de</em> FENCING</a>
     <div class="nav-links">
-      <a href="index.html" >홈</a>
-      <a href="rules.html" >규정 검색</a>
-      <a href="board.html" >게시판</a>
+      <a href="index.html">홈</a>
+      <a href="rules.html">규정 검색</a>
+      <a href="board.html">게시판</a>
       <a href="feed.html" class="active">펜싱 피드</a>
-      <a href="sites.html" >사이트 모음</a>
-      <a href="clubs.html" >클럽 찾기</a>
+      <a href="sites.html">사이트 모음</a>
+      <a href="clubs.html">클럽 찾기</a>
       <a href="sizing.html">사이즈 조견표</a>
     </div>
     <div class="nav-auth" id="nav-auth">
@@ -225,7 +225,6 @@
       <button class="modal-close" onclick="closeUpload()">×</button>
     </div>
     <div class="modal-body">
-      <!-- 타입 선택 -->
       <div class="type-tabs" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
         <button class="type-tab active" id="tab-image" onclick="setUploadType('image')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -249,7 +248,6 @@
         </button>
       </div>
 
-      <!-- 파일 업로드 -->
       <div id="file-upload-area">
         <div class="drop-zone" id="drop-zone">
           <input type="file" id="file-input" accept="image/*">
@@ -263,14 +261,12 @@
         </div>
       </div>
 
-      <!-- 링크 입력 -->
       <div class="link-input-wrap" id="link-input-area">
         <input type="url" id="link-input" placeholder="링크를 붙여넣으세요..." oninput="onLinkInput()">
         <div class="link-preview" id="link-preview">
           <img id="link-thumb" src="" alt="">
           <div class="link-preview-info" id="link-preview-info"></div>
         </div>
-        <!-- 인스타 전용: 썸네일 이미지 업로드 -->
         <div id="insta-thumb-area" style="display:none;margin-top:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500">📷 썸네일 이미지 (선택) — 없으면 인스타 로고로 표시</div>
           <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px dashed var(--border-strong);border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)">
@@ -389,9 +385,44 @@ function renderNavAuth() {
 function showAuthPrompt() { location.href = 'board.html'; }
 async function logout() { await sb.auth.signOut(); showToast('로그아웃 됐어요'); }
 
-/* ── 피드 로드 ── */
+/* ── Reddit 로드 (allorigins /get 사용) ── */
+async function loadReddit() {
+  const target = 'https://www.reddit.com/r/fencing/top.json?limit=40&t=week';
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 8000);
+    const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(target), { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!res.ok) throw new Error('allorigins ' + res.status);
+    const wrapper = await res.json();
+    const data = JSON.parse(wrapper.contents);
+    const posts = data.data.children.map(c => c.data)
+      .filter(p => !p.stickied && (
+        p.post_hint === 'image' ||
+        p.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+        p.preview?.images?.length > 0
+      ));
+    const items = posts.map(p => ({
+      id: 'reddit-' + p.id,
+      source: 'reddit',
+      type: 'image',
+      title: p.title,
+      thumbnail: p.preview?.images?.[0]?.resolutions?.[1]?.url?.replace(/&amp;/g,'&')
+              || p.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&') || '',
+      url: 'https://reddit.com' + p.permalink,
+      author: 'r/fencing',
+      likes: p.score,
+      date: new Date(p.created_utc * 1000).toISOString(),
+    }));
+    allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
+    allItems.push(...items);
+    console.log('Reddit: ' + items.length + '개 로드됨');
+  } catch(e) {
+    console.warn('Reddit 로드 실패:', e.message);
+  }
+}
 
-// YouTube 설정
+/* ── YouTube 로드 ── */
 const YT_API_KEY = 'AIzaSyCyaXGc37NukjVWkYf3xk67VWvKtikCQD0';
 const YT_HANDLES = [
   { handle: 'SlicerSabre',           name: 'SlicerSabre' },
@@ -409,122 +440,48 @@ const YT_ID_CACHE_KEY = 'mdf_yt_ids_v3';
 
 async function resolveChannelId(handle) {
   try {
-    const encoded = encodeURIComponent(handle);
-    const url = `https://www.googleapis.com/youtube/v3/channels?part=id,snippet&forHandle=${encoded}&key=${YT_API_KEY}`;
-    const res = await fetch(url);
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=id,snippet&forHandle=${encodeURIComponent(handle)}&key=${YT_API_KEY}`);
     if (!res.ok) return null;
     const data = await res.json();
     return data.items?.[0]?.id || null;
-  } catch(e) {
-    console.warn(`채널 해석 실패: ${handle}`, e);
-    return null;
-  }
+  } catch(e) { return null; }
 }
 
 async function loadYouTube() {
-  // 캐시에서 채널 ID 로드
   let idCache = {};
   try { idCache = JSON.parse(localStorage.getItem(YT_ID_CACHE_KEY) || '{}'); } catch(e) {}
-
   const items = [];
   for (const ch of YT_HANDLES) {
     try {
-      // 채널 ID 없으면 API로 조회
       if (!idCache[ch.handle]) {
         const id = await resolveChannelId(ch.handle);
-        if (id) { idCache[ch.handle] = id; }
-        else { console.warn(`채널 ID 없음: @${ch.handle}`); continue; }
+        if (id) idCache[ch.handle] = id;
+        else continue;
       }
       const channelId = idCache[ch.handle];
-      if (!channelId) continue;
-
-      // 최신 영상 가져오기
-      const url = `https://www.googleapis.com/youtube/v3/search?channelId=${channelId}&part=snippet&order=date&maxResults=6&type=video&key=${YT_API_KEY}`;
-      const res = await fetch(url);
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/search?channelId=${channelId}&part=snippet&order=date&maxResults=6&type=video&key=${YT_API_KEY}`);
       if (!res.ok) continue;
       const data = await res.json();
-
       (data.items || []).forEach(item => {
         items.push({
           id: 'yt-' + item.id.videoId,
           source: 'youtube',
           type: 'youtube',
           title: item.snippet.title,
-          thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
+          thumbnail: item.snippet.thumbnails?.medium?.url || '',
           url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
           author: ch.name,
           likes: null,
           date: item.snippet.publishedAt,
         });
       });
-    } catch(e) {
-      console.warn(`YouTube ${ch.handle} 로드 실패:`, e);
-    }
+    } catch(e) { console.warn('YouTube ' + ch.handle + ' 실패:', e); }
   }
-
-  // 캐시 저장
   try { localStorage.setItem(YT_ID_CACHE_KEY, JSON.stringify(idCache)); } catch(e) {}
-
   allItems = allItems.filter(i => !i.id.startsWith('yt-'));
   allItems.push(...items);
-  console.log(`YouTube: ${items.length}개 영상 로드됨`);
+  console.log('YouTube: ' + items.length + '개 로드됨');
 }
-
-async function loadAll() {
-  document.getElementById('feed-status').textContent = '피드 로딩 중...';
-  document.getElementById('masonry').innerHTML = '';
-  // allSettled: 하나 실패해도 나머지는 계속
-  await Promise.allSettled([loadReddit(), loadUserMemes(), loadYouTube()]);
-  applyFilterSort();
-}
-
-async function loadReddit() {
-  const BASE = 'https://www.reddit.com/r/fencing/top.json?limit=40&t=week';
-  const ATTEMPTS = [
-    BASE,
-    `https://corsproxy.io/?${encodeURIComponent(BASE)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(BASE)}`,
-    `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(BASE)}`,
-  ];
-
-  for (const url of ATTEMPTS) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 5000);
-      const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
-      clearTimeout(tid);
-      if (!res.ok) { console.warn('Reddit attempt failed:', url, res.status); continue; }
-      const text = await res.text();
-      // allorigins /get wrapper 대응
-      const raw = text.startsWith('{"contents"') ? JSON.parse(text).contents : text;
-      const data = JSON.parse(raw);
-      const posts = data.data.children.map(c => c.data)
-        .filter(p => !p.stickied && (
-          p.post_hint === 'image' ||
-          p.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
-          p.preview?.images?.length > 0
-        ));
-      const items = posts.map(p => ({
-        id: 'reddit-' + p.id,
-        source: 'reddit',
-        type: 'image',
-        title: p.title,
-        thumbnail: p.preview?.images?.[0]?.resolutions?.[1]?.url?.replace(/&amp;/g,'&')
-                || p.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&') || '',
-        url: 'https://reddit.com' + p.permalink,
-        author: 'r/fencing',
-        likes: p.score,
-        date: new Date(p.created_utc * 1000).toISOString(),
-      }));
-      allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
-      allItems.push(...items);
-      console.log(`Reddit: ${items.length}개 로드됨 (via ${url.startsWith('https://www.reddit') ? 'direct' : new URL(url).hostname})`);
-      return; // 성공하면 종료
-    } catch(e) { console.warn('Reddit attempt error:', e.message); continue; }
-  }
-  console.warn('Reddit: 모든 시도 실패');
-}
-
 
 async function loadUserMemes() {
   try {
@@ -533,15 +490,12 @@ async function loadUserMemes() {
       .order('created_at', { ascending: false })
       .limit(100);
     if (!memes || !memes.length) return;
-
-    // 작성자 username 별도 조회
     const authorIds = [...new Set(memes.map(m => m.author_id))];
     const profileMap = {};
     if (authorIds.length) {
       const { data: profiles } = await sb.from('profiles').select('id, username').in('id', authorIds);
       (profiles||[]).forEach(p => { profileMap[p.id] = p.username; });
     }
-
     const items = memes.map(m => ({
       id: 'user-' + m.id,
       dbId: m.id,
@@ -559,7 +513,14 @@ async function loadUserMemes() {
     }));
     allItems = allItems.filter(i => !i.id.startsWith('user-'));
     allItems.push(...items);
-  } catch(e) { console.warn('User memes load failed:', e); }
+  } catch(e) { console.warn('User memes 실패:', e); }
+}
+
+async function loadAll() {
+  document.getElementById('feed-status').textContent = '피드 로딩 중...';
+  document.getElementById('masonry').innerHTML = '';
+  await Promise.allSettled([loadReddit(), loadUserMemes(), loadYouTube()]);
+  applyFilterSort();
 }
 
 /* ── 필터/정렬 ── */
@@ -596,14 +557,11 @@ function renderGrid() {
   const status = document.getElementById('feed-status');
   const moreBtn = document.getElementById('load-more');
   const toShow = filteredItems.slice(0, displayCount);
-
   if (!toShow.length) {
     grid.innerHTML = '';
-    if (allItems.length === 0) {
-      status.innerHTML = 'Reddit 피드를 불러오는 중이에요. 잠시 후 새로고침해보세요. <button onclick="loadAll()" style="margin-left:8px;padding:4px 12px;border:1px solid var(--border-strong);border-radius:6px;background:transparent;cursor:pointer;font-size:12px">다시 시도</button>';
-    } else {
-      status.textContent = '이 소스의 콘텐츠가 없어요';
-    }
+    status.innerHTML = allItems.length === 0
+      ? '피드를 불러오지 못했어요. <button onclick="loadAll()" style="margin-left:8px;padding:4px 12px;border:1px solid var(--border-strong);border-radius:6px;background:transparent;cursor:pointer;font-size:12px">다시 시도</button>'
+      : '이 소스의 콘텐츠가 없어요';
     moreBtn.style.display = 'none';
     return;
   }
@@ -613,18 +571,15 @@ function renderGrid() {
 }
 
 function renderCard(item) {
-  const isUserItem = item.source === 'user';
   const isOwner = currentUser && item.authorId === currentUser.id;
   const badgeClass = { reddit:'badge-reddit', user:'badge-user', youtube:'badge-youtube', instagram:'badge-instagram' }[item.source] || 'badge-user';
   const badgeLabel = { reddit:'Reddit', user:'회원 업로드', youtube:'YouTube', instagram:'Instagram' }[item.source] || '업로드';
   const isVideo = item.type === 'video' || item.type === 'youtube' || item.type === 'instagram';
 
-  // 항상 썸네일 이미지 사용 (비디오 태그 사용 안 함)
   let thumbHtml = '';
   if (item.thumbnail) {
     thumbHtml = `<img src="${esc(item.thumbnail)}" alt="${esc(item.title)}" loading="lazy" style="width:100%;display:block;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;align-items:center;justify-content:center;min-height:120px;font-size:40px">🤺</div>`;
   } else if (item.type === 'instagram') {
-    // 인스타 로고 + 보라색 그라데이션 배경
     thumbHtml = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);gap:8px">
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="white"/></svg>
       <span style="color:white;font-size:11px;font-weight:600;letter-spacing:1px">INSTAGRAM</span>
@@ -633,16 +588,9 @@ function renderCard(item) {
     thumbHtml = `<div style="display:flex;align-items:center;justify-content:center;min-height:120px;font-size:40px">🤺</div>`;
   }
 
-  const playOverlay = isVideo ? `
-    <div class="play-overlay">
-      <div class="play-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--ink)"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </div>
-    </div>` : '';
-
+  const playOverlay = isVideo ? `<div class="play-overlay"><div class="play-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--ink)"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>` : '';
   const target = item.url && item.url !== '#' ? 'target="_blank" rel="noopener"' : '';
-
-  const userActions = isUserItem ? `
+  const userActions = item.source === 'user' ? `
     <button class="like-btn ${item.liked ? 'liked' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleMemeLike('${item.dbId}',this)">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="${item.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       ${formatCount(item.likes)}
@@ -669,7 +617,7 @@ function renderCard(item) {
     </div>`;
 }
 
-/* ── 좋아요 (user memes) ── */
+/* ── 좋아요 ── */
 async function toggleMemeLike(memeId, btn) {
   if (!currentUser) { showToast('로그인 후 좋아요를 누를 수 있어요'); return; }
   const isLiked = btn.classList.contains('liked');
@@ -720,9 +668,9 @@ function resetUploadForm() {
   document.getElementById('upload-progress').style.display = 'none';
   document.getElementById('upload-progress-bar').style.width = '0%';
   document.getElementById('file-input').value = '';
-  if (document.getElementById('insta-thumb-input')) document.getElementById('insta-thumb-input').value = '';
-  if (document.getElementById('insta-thumb-preview')) document.getElementById('insta-thumb-preview').style.display = 'none';
-  if (document.getElementById('insta-thumb-label')) document.getElementById('insta-thumb-label').textContent = '이미지 선택...';
+  document.getElementById('insta-thumb-input').value = '';
+  document.getElementById('insta-thumb-preview').style.display = 'none';
+  document.getElementById('insta-thumb-label').textContent = '이미지 선택...';
 }
 
 function setUploadType(type) {
@@ -733,35 +681,22 @@ function setUploadType(type) {
   const isFile = type === 'image' || type === 'video';
   document.getElementById('file-upload-area').style.display = isFile ? '' : 'none';
   document.getElementById('link-input-area').style.display = isFile ? 'none' : 'block';
-
   const fileInput = document.getElementById('file-input');
   const hint = document.getElementById('file-hint');
   if (type === 'image') { fileInput.accept = 'image/*'; hint.textContent = 'JPG, PNG, GIF, WebP · 최대 10MB'; }
   if (type === 'video') { fileInput.accept = 'video/*'; hint.textContent = 'MP4, MOV, WebM · 최대 50MB'; }
-
-  const placeholder = {
-    instagram: 'https://www.instagram.com/p/...',
-    youtube:   'https://www.youtube.com/watch?v=...',
-    reddit:    'https://www.reddit.com/r/fencing/...',
-  }[type] || '';
-  if (document.getElementById('link-input')) document.getElementById('link-input').placeholder = placeholder;
-
-  const instaThumbArea = document.getElementById('insta-thumb-area');
-  if (instaThumbArea) instaThumbArea.style.display = type === 'instagram' ? '' : 'none';
+  const placeholder = { instagram:'https://www.instagram.com/p/...', youtube:'https://www.youtube.com/watch?v=...', reddit:'https://www.reddit.com/r/fencing/...' }[type] || '';
+  document.getElementById('link-input').placeholder = placeholder;
+  document.getElementById('insta-thumb-area').style.display = type === 'instagram' ? '' : 'none';
 }
 
-// 파일 선택
 document.addEventListener('DOMContentLoaded', () => {
   const fileInput = document.getElementById('file-input');
   const dropZone = document.getElementById('drop-zone');
-
   fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
   dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault(); dropZone.classList.remove('drag-over');
-    handleFile(e.dataTransfer.files[0]);
-  });
+  dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); });
 });
 
 function handleFile(file) {
@@ -773,32 +708,22 @@ function handleFile(file) {
   const img = document.getElementById('preview-img');
   const vid = document.getElementById('preview-video');
   wrap.style.display = '';
-  if (file.type.startsWith('image/')) {
-    img.src = URL.createObjectURL(file); img.style.display = ''; vid.style.display = 'none';
-  } else {
-    vid.src = URL.createObjectURL(file); vid.style.display = ''; img.style.display = 'none';
-  }
-  // 제목은 비워두고 사용자가 직접 입력하게 함
+  if (file.type.startsWith('image/')) { img.src = URL.createObjectURL(file); img.style.display = ''; vid.style.display = 'none'; }
+  else { vid.src = URL.createObjectURL(file); vid.style.display = ''; img.style.display = 'none'; }
 }
 
-// 링크 입력
 async function onLinkInput() {
   const url = document.getElementById('link-input').value.trim();
   const preview = document.getElementById('link-preview');
   const thumb = document.getElementById('link-thumb');
   const info = document.getElementById('link-preview-info');
   linkThumbUrl = '';
-
   if (uploadType === 'youtube') {
     const id = getYouTubeId(url);
     if (id) {
       linkThumbUrl = `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
-      thumb.src = linkThumbUrl;
-      info.textContent = 'YouTube 영상';
-      preview.style.display = '';
-      if (!document.getElementById('upload-title').value) {
-        document.getElementById('upload-title').value = 'YouTube 영상';
-      }
+      thumb.src = linkThumbUrl; info.textContent = 'YouTube 영상'; preview.style.display = '';
+      if (!document.getElementById('upload-title').value) document.getElementById('upload-title').value = 'YouTube 영상';
     } else { preview.style.display = 'none'; }
   } else if (uploadType === 'reddit') {
     const id = getRedditId(url);
@@ -811,9 +736,7 @@ async function onLinkInput() {
           const t = post.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&') || '';
           if (t) { linkThumbUrl = t; thumb.src = t; preview.style.display = ''; }
           info.textContent = 'r/' + (post.subreddit || 'fencing');
-          if (!document.getElementById('upload-title').value) {
-            document.getElementById('upload-title').value = post.title?.slice(0,80) || '';
-          }
+          if (!document.getElementById('upload-title').value) document.getElementById('upload-title').value = post.title?.slice(0,80) || '';
         }
       } catch(e) { preview.style.display = 'none'; }
     } else { preview.style.display = 'none'; }
@@ -825,57 +748,37 @@ async function onLinkInput() {
           const data = await res.json();
           if (data.thumbnail_url) { linkThumbUrl = data.thumbnail_url; thumb.src = linkThumbUrl; preview.style.display = ''; }
           info.textContent = data.author_name ? `@${data.author_name}` : 'Instagram';
-          if (!document.getElementById('upload-title').value && data.title)
-            document.getElementById('upload-title').value = data.title.slice(0,80);
-        } else {
-          info.textContent = 'Instagram 게시물'; preview.style.display = 'none';
-          if (!document.getElementById('upload-title').value)
-            document.getElementById('upload-title').value = 'Instagram 게시물';
-        }
+          if (!document.getElementById('upload-title').value && data.title) document.getElementById('upload-title').value = data.title.slice(0,80);
+        } else { info.textContent = 'Instagram 게시물'; preview.style.display = 'none'; }
       } catch(e) { info.textContent = 'Instagram 게시물'; preview.style.display = 'none'; }
     } else { preview.style.display = 'none'; }
   }
 }
 
-// 업로드 제출
 async function submitUpload() {
   if (!currentUser) return;
   const title = document.getElementById('upload-title').value.trim();
   const link = document.getElementById('link-input').value.trim();
   if (!title) { showError('제목을 입력해주세요'); return; }
-
   const isFile = uploadType === 'image' || uploadType === 'video';
   if (isFile && !selectedFile) { showError('파일을 선택해주세요'); return; }
   if (!isFile && !link) { showError('링크를 입력해주세요'); return; }
-
   const btn = document.getElementById('submit-btn');
   btn.disabled = true; btn.textContent = '업로드 중...';
   setProgress(10);
-
   try {
     let fileUrl = null, thumbnailUrl = linkThumbUrl || null;
-
     if (isFile && selectedFile) {
       const ext = selectedFile.name.split('.').pop().toLowerCase();
       const path = `${currentUser.id}/${Date.now()}.${ext}`;
       setProgress(30);
-      const { data: uploadData, error: uploadError } = await sb.storage
-        .from('meme-uploads')
-        .upload(path, selectedFile, { upsert: false, contentType: selectedFile.type });
-      if (uploadError) {
-        if (uploadError.message?.includes('bucket') || uploadError.message?.includes('not found')) {
-          throw new Error('Storage 버킷이 없어요. Supabase → Storage → meme-uploads 버킷을 Public으로 만들어주세요.');
-        }
-        throw uploadError;
-      }
+      const { data: uploadData, error: uploadError } = await sb.storage.from('meme-uploads').upload(path, selectedFile, { upsert: false, contentType: selectedFile.type });
+      if (uploadError) throw uploadError;
       setProgress(70);
       const { data: { publicUrl } } = sb.storage.from('meme-uploads').getPublicUrl(path);
       fileUrl = publicUrl;
       if (uploadType === 'image') thumbnailUrl = publicUrl;
-    // 제목은 자동입력 안 함 - 사용자가 직접 입력
     }
-
-    // 인스타 썸네일 이미지 별도 업로드
     if (uploadType === 'instagram' && instaThumbFile) {
       setProgress(40);
       const ext = instaThumbFile.name.split('.').pop().toLowerCase();
@@ -887,50 +790,18 @@ async function submitUpload() {
       }
       setProgress(70);
     }
-
     setProgress(85);
-    console.log('memes insert 시작:', { type: uploadType, title, link_url: isFile ? null : link, thumbnail_url: thumbnailUrl });
-    const { error: insertError } = await sb.from('memes').insert({
-      author_id: currentUser.id,
-      type: uploadType,
-      title,
-      file_url: fileUrl,
-      link_url: isFile ? null : link,
-      thumbnail_url: thumbnailUrl,
-    });
-    if (insertError) {
-      console.error('insert 오류:', insertError);
-      if (insertError.message?.includes('memes_type_check')) {
-        throw new Error('타입 제약 오류 — SQL에서 constraint 재설정 필요');
-      }
-      if (insertError.message?.includes('row-level security')) {
-        throw new Error('권한 오류 (RLS) — Supabase 정책을 확인해주세요');
-      }
-      throw insertError;
-    }
-    console.log('insert 성공!');
-
+    const { error: insertError } = await sb.from('memes').insert({ author_id: currentUser.id, type: uploadType, title, file_url: fileUrl, link_url: isFile ? null : link, thumbnail_url: thumbnailUrl });
+    if (insertError) throw insertError;
     setProgress(100);
     setTimeout(async () => {
-      try {
-        closeUpload();
-        showToast('업로드됐어요! 🎉');
-        allItems = allItems.filter(i => !i.id.startsWith('user-'));
-        await loadUserMemes();
-        applyFilterSort();
-      } catch(innerErr) {
-        console.error('업로드 후 오류:', innerErr);
-        closeUpload();
-        showToast('업로드됐어요! (피드 새로고침 필요)');
-      }
+      closeUpload(); showToast('업로드됐어요! 🎉');
+      allItems = allItems.filter(i => !i.id.startsWith('user-'));
+      await loadUserMemes(); applyFilterSort();
     }, 400);
   } catch(e) {
-    console.error('업로드 오류:', e);
-    const msg = e.message || '알 수 없는 오류';
-    showError('업로드 실패: ' + msg);
-    btn.disabled = false;
-    btn.textContent = '올리기';
-    setProgress(0);
+    showError('업로드 실패: ' + (e.message || '알 수 없는 오류'));
+    btn.disabled = false; btn.textContent = '올리기'; setProgress(0);
   }
 }
 
@@ -944,10 +815,7 @@ function showError(msg) {
 }
 
 /* ── Init ── */
-async function init() {
-  await initAuth();
-  await loadAll();
-}
+async function init() { await initAuth(); await loadAll(); }
 init();
 </script>
 </body>
