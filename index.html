@@ -692,9 +692,7 @@ async function loadMemes() {
   const grid = document.getElementById('meme-grid');
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;font-size:12px;color:var(--muted)">로딩 중...</div>';
   try {
-    const res = await fetch('https://www.reddit.com/r/fencing/top.json?limit=30&t=week', {
-      headers: { 'Accept': 'application/json' }
-    });
+    const res = await fetch('https://corsproxy.io/?url=https://www.reddit.com/r/fencing/top.json?limit=30%26t=week');
     if (!res.ok) throw new Error('Reddit API ' + res.status);
     const data = await res.json();
     const posts = data.data.children
