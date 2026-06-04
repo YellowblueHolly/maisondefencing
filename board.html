@@ -251,7 +251,7 @@
           <button class="board-tab" id="tab-recruit" onclick="switchTab('recruit')">🏛 클럽 구인 & 홍보</button>
         </div>
         <div class="board-search">
-          <input type="text" id="search-input" placeholder="제목 또는 지역으로 검색" onkeydown="if(event.key==='Enter')doSearch()" />
+          <input type="text" id="search-input" placeholder="제목 또는 지역으로 검색" autocomplete="off" onkeydown="if(event.key==='Enter')doSearch()" />
           <button onclick="doSearch()">검색</button>
         </div>
         <div class="post-table-header">
@@ -1084,6 +1084,10 @@ function goList() {
 /* ─── 초기화 ─── */
 async function init() {
   await initAuth();
+  // 브라우저 자동완성으로 검색창에 값이 들어가는 것 방지
+  const si = document.getElementById('search-input');
+  if (si) si.value = '';
+  currentSearch = '';
   showView('list');
   loadPosts();
 
