@@ -385,35 +385,32 @@ function renderNavAuth() {
 function showAuthPrompt() { location.href = 'board.html'; }
 async function logout() { await sb.auth.signOut(); showToast('로그아웃 됐어요'); }
 
-/* ── Reddit 로드 (allorigins /get 사용) ── */
+/* ── Reddit 로드 (rss2json 사용) ── */
 async function loadReddit() {
-  const target = 'https://www.reddit.com/r/fencing/top.json?limit=40&t=week';
+  const rssUrl = 'https://www.reddit.com/r/fencing/top/.rss?limit=40&t=week';
+  const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
   try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 8000);
-    const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(target), { signal: ctrl.signal });
-    clearTimeout(tid);
-    if (!res.ok) throw new Error('allorigins ' + res.status);
-    const wrapper = await res.json();
-    const data = JSON.parse(wrapper.contents);
-    const posts = data.data.children.map(c => c.data)
-      .filter(p => !p.stickied && (
-        p.post_hint === 'image' ||
-        p.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
-        p.preview?.images?.length > 0
-      ));
-    const items = posts.map(p => ({
-      id: 'reddit-' + p.id,
-      source: 'reddit',
-      type: 'image',
-      title: p.title,
-      thumbnail: p.preview?.images?.[0]?.resolutions?.[1]?.url?.replace(/&amp;/g,'&')
-              || p.preview?.images?.[0]?.source?.url?.replace(/&amp;/g,'&') || '',
-      url: 'https://reddit.com' + p.permalink,
-      author: 'r/fencing',
-      likes: p.score,
-      date: new Date(p.created_utc * 1000).toISOString(),
-    }));
+    const res = await fetch(apiUrl);
+    if (!res.ok) throw new Error('rss2json ' + res.status);
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error('rss2json status: ' + data.status);
+
+    const items = (data.items || []).map(item => {
+      const imgMatch = item.description?.match(/<img[^>]+src="([^"]+)"/);
+      const thumb = imgMatch ? imgMatch[1] : '';
+      return {
+        id: 'reddit-' + encodeURIComponent(item.link),
+        source: 'reddit',
+        type: 'image',
+        title: item.title,
+        thumbnail: thumb,
+        url: item.link,
+        author: 'r/fencing',
+        likes: 0,
+        date: item.pubDate || new Date().toISOString(),
+      };
+    }).filter(i => i.thumbnail && !i.thumbnail.includes('external-preview'));
+
     allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
     allItems.push(...items);
     console.log('Reddit: ' + items.length + '개 로드됨');
