@@ -152,6 +152,53 @@
   .error-msg { font-size: 12px; color: var(--red); margin-top: 8px; display: none; }
   .error-msg.show { display: block; }
 
+  /* Category tabs */
+  .board-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--paper); }
+  .board-tab { padding: 11px 20px; font-size: 13px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--font-body); }
+  .board-tab:hover { color: var(--ink); }
+  .board-tab.active-all { color: var(--ink); border-bottom-color: var(--ink); font-weight: 500; }
+  .board-tab.active-open { color: #1A4A7A; border-bottom-color: #1A4A7A; font-weight: 500; }
+  .board-tab.active-recruit { color: #7A3A1A; border-bottom-color: #7A3A1A; font-weight: 500; }
+
+  /* Search bar */
+  .board-search { display: flex; gap: 8px; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--paper); }
+  .board-search input { flex: 1; padding: 7px 12px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 13px; background: var(--cream); color: var(--ink); outline: none; font-family: var(--font-body); }
+  .board-search input:focus { border-color: var(--ink); }
+  .board-search button { padding: 7px 16px; border: 1px solid var(--border-strong); border-radius: 6px; background: transparent; color: var(--muted); font-size: 13px; font-family: var(--font-body); transition: all .15s; }
+  .board-search button:hover { background: var(--faint); color: var(--ink); }
+
+  /* Category badges */
+  .cat-badge { font-size: 10px; padding: 2px 7px; border-radius: 3px; font-weight: 600; flex-shrink: 0; letter-spacing: .3px; }
+  .cat-badge-open { background: var(--blue-bg); color: var(--blue); }
+  .cat-badge-recruit { background: #F5EEE8; color: #7A3A1A; }
+
+  /* D-day badge */
+  .dday-badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; background: var(--red-bg); color: var(--red); font-weight: 600; flex-shrink: 0; }
+
+  /* Write form category selector */
+  .cat-select-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .cat-select-btn { padding: 14px; border-radius: 10px; border: 1.5px solid var(--border-strong); background: var(--paper); cursor: pointer; text-align: center; transition: all .15s; font-family: var(--font-body); }
+  .cat-select-btn .cs-icon { font-size: 22px; margin-bottom: 6px; }
+  .cat-select-btn .cs-label { font-size: 13px; font-weight: 500; color: var(--ink); display: block; }
+  .cat-select-btn .cs-desc { font-size: 11px; color: var(--muted); margin-top: 3px; display: block; }
+  .cat-select-btn.sel-open { border-color: var(--blue); background: var(--blue-bg); }
+  .cat-select-btn.sel-open .cs-label { color: var(--blue); }
+  .cat-select-btn.sel-recruit { border-color: #7A3A1A; background: #F5EEE8; }
+  .cat-select-btn.sel-recruit .cs-label { color: #7A3A1A; }
+
+  /* Write form field rows */
+  .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .form-group select { padding: 11px 14px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 14px; color: var(--ink); background: var(--cream); outline: none; transition: border-color .15s; font-family: var(--font-body); }
+  .form-group select:focus { border-color: var(--ink); }
+  .form-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .form-chip { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border-strong); color: var(--muted); cursor: pointer; background: transparent; font-family: var(--font-body); transition: all .15s; }
+  .form-chip:hover { background: var(--faint); color: var(--ink); }
+  .form-chip.sel-open { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
+  .form-chip.sel-recruit { border-color: #7A3A1A; color: #7A3A1A; background: #F5EEE8; }
+  .section-divider { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 16px; margin-top: 8px; }
+
   /* Toast */
   .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--cream); font-size: 13px; padding: 10px 20px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 999; white-space: nowrap; }
   .toast.show { opacity: 1; }
@@ -172,7 +219,6 @@
       <a href="feed.html" >펜싱 피드</a>
       <a href="sites.html" >사이트 모음</a>
       <a href="clubs.html" >클럽 찾기</a>
-      <a href="sizing.html">사이즈 조견표</a>
     </div>
     <div class="nav-auth" id="nav-auth">
       <button class="btn-sm" onclick="showAuth('login')">로그인</button>
@@ -184,8 +230,8 @@
 <div class="page-header">
   <div class="page-header-inner">
     <div>
-      <h1>자유게시판</h1>
-      <p>펜싱 이야기 · 정보 · 질문 · 잡담</p>
+      <h1>게시판</h1>
+      <p>오픈 피스트 · 클럽 구인 & 홍보</p>
     </div>
     <button class="btn-write" onclick="goWrite()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -199,6 +245,15 @@
   <div class="page-body">
     <div>
       <div class="post-table">
+        <div class="board-tabs">
+          <button class="board-tab active-all" id="tab-all" onclick="switchTab('all')">전체</button>
+          <button class="board-tab" id="tab-open" onclick="switchTab('open')">🤺 오픈 피스트</button>
+          <button class="board-tab" id="tab-recruit" onclick="switchTab('recruit')">🏛 클럽 구인 & 홍보</button>
+        </div>
+        <div class="board-search">
+          <input type="text" id="search-input" placeholder="제목 또는 지역으로 검색" onkeydown="if(event.key==='Enter')doSearch()" />
+          <button onclick="doSearch()">검색</button>
+        </div>
         <div class="post-table-header">
           <span>제목</span>
           <span>작성자</span>
@@ -221,6 +276,7 @@
         <div style="font-size:13px;color:rgba(245,242,236,0.5);line-height:1.7">
           <strong style="color:var(--cream);display:block;margin-bottom:4px">이용 안내</strong>
           로그인 후 글쓰기, 댓글, 좋아요가 가능합니다.<br>
+          오픈 피스트 글은 날짜 마감 후 자동 아카이브됩니다.<br>
           비방·광고성 글은 삭제될 수 있어요.
         </div>
       </div>
@@ -288,17 +344,152 @@
   <div class="page-body" style="grid-template-columns:1fr">
     <div class="write-form">
       <h2 id="write-title">새 글 작성</h2>
-      <div class="form-group">
-        <label>제목</label>
-        <input type="text" id="input-title" placeholder="제목을 입력하세요" maxlength="100">
+
+      <!-- 카테고리 선택 -->
+      <div id="cat-select-section">
+        <div class="section-divider">카테고리 선택</div>
+        <div class="cat-select-row">
+          <button class="cat-select-btn" id="cs-open" onclick="selectWriteCat('open')">
+            <div class="cs-icon">🤺</div>
+            <span class="cs-label">오픈 피스트 (Open Bout)</span>
+            <span class="cs-desc">훈련 파트너 · 합동 경기 모집</span>
+          </button>
+          <button class="cat-select-btn" id="cs-recruit" onclick="selectWriteCat('recruit')">
+            <div class="cs-icon">🏛</div>
+            <span class="cs-label">클럽 구인 & 홍보</span>
+            <span class="cs-desc">코치 모집 · 클럽 소개 · 파트타임</span>
+          </button>
+        </div>
       </div>
-      <div class="form-group">
-        <label>내용</label>
-        <textarea id="input-body" placeholder="내용을 입력하세요..."></textarea>
+
+      <!-- 오픈 피스트 폼 -->
+      <div id="form-open" style="display:none">
+        <div class="section-divider">오픈 피스트 정보</div>
+        <div class="form-group">
+          <label>제목 <span style="color:var(--red)">*</span></label>
+          <input type="text" id="input-title" placeholder="예) [강남] 6/15 에페 오픈 피스트 같이 하실 분" maxlength="100">
+        </div>
+        <div class="form-row3" style="margin-bottom:16px">
+          <div class="form-group" style="margin-bottom:0">
+            <label>종목 <span style="color:var(--red)">*</span></label>
+            <select id="input-weapon">
+              <option value="">선택</option>
+              <option value="플뢰레">플뢰레</option>
+              <option value="에페">에페</option>
+              <option value="사브르">사브르</option>
+              <option value="무관">무관</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>날짜 <span style="color:var(--red)">*</span></label>
+            <input type="date" id="input-event-date">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>시간</label>
+            <input type="time" id="input-event-time">
+          </div>
+        </div>
+        <div class="form-row2" style="margin-bottom:16px">
+          <div class="form-group" style="margin-bottom:0">
+            <label>장소 <span style="color:var(--red)">*</span></label>
+            <input type="text" id="input-location" placeholder="예) 강남구 체육관 또는 클럽명">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>모집 인원</label>
+            <input type="number" id="input-max-participants" placeholder="예) 4" min="1">
+            <div class="form-hint">미입력 시 제한 없음으로 표시</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>수준</label>
+          <div class="chip-group" id="level-chips">
+            <button type="button" class="form-chip" onclick="toggleChip(this,'open','level')">입문</button>
+            <button type="button" class="form-chip" onclick="toggleChip(this,'open','level')">초급</button>
+            <button type="button" class="form-chip" onclick="toggleChip(this,'open','level')">중급</button>
+            <button type="button" class="form-chip" onclick="toggleChip(this,'open','level')">고급</button>
+            <button type="button" class="form-chip" onclick="toggleChip(this,'open','level')">무관</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>상세 내용</label>
+          <textarea id="input-body" placeholder="장비 대여 가능 여부, 주차, 참가비 등 추가 안내를 적어주세요."></textarea>
+        </div>
+        <div class="form-group">
+          <label>연락 방법</label>
+          <input type="text" id="input-contact" placeholder="예) 댓글로 신청 / 오픈카톡 링크">
+        </div>
       </div>
+
+      <!-- 클럽 구인 & 홍보 폼 -->
+      <div id="form-recruit" style="display:none">
+        <div class="section-divider">구인 & 홍보 정보</div>
+        <div class="form-group">
+          <label>제목 <span style="color:var(--red)">*</span></label>
+          <input type="text" id="input-title-r" placeholder="예) 마포 펜싱클럽 — 성인반 코치 모집" maxlength="100">
+        </div>
+        <div class="form-row3" style="margin-bottom:16px">
+          <div class="form-group" style="margin-bottom:0">
+            <label>직종 <span style="color:var(--red)">*</span></label>
+            <select id="input-job-type">
+              <option value="">선택</option>
+              <option value="코치">코치</option>
+              <option value="파트타임 강사">파트타임 강사</option>
+              <option value="행정 스태프">행정 스태프</option>
+              <option value="클럽 홍보">클럽 홍보</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>근무 형태</label>
+            <select id="input-work-type">
+              <option value="">선택</option>
+              <option value="풀타임">풀타임</option>
+              <option value="파트타임">파트타임</option>
+              <option value="프리랜서">프리랜서</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>지역 <span style="color:var(--red)">*</span></label>
+            <input type="text" id="input-region" placeholder="예) 서울 마포구">
+          </div>
+        </div>
+        <div class="form-row2" style="margin-bottom:16px">
+          <div class="form-group" style="margin-bottom:0">
+            <label>담당 종목</label>
+            <div class="chip-group">
+              <button type="button" class="form-chip" onclick="toggleChip(this,'recruit','weapon-r')">플뢰레</button>
+              <button type="button" class="form-chip" onclick="toggleChip(this,'recruit','weapon-r')">에페</button>
+              <button type="button" class="form-chip" onclick="toggleChip(this,'recruit','weapon-r')">사브르</button>
+              <button type="button" class="form-chip" onclick="toggleChip(this,'recruit','weapon-r')">무관</button>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>담당 대상</label>
+            <div class="chip-group">
+              <button type="button" class="form-chip" onclick="toggleChip(this,'recruit','target')">유소년</button>
+              <button type="button" class="form-chip" onclick="toggleChip(this,'recruit','target')">청소년</button>
+              <button type="button" class="form-chip" onclick="toggleChip(this,'recruit','target')">성인</button>
+              <button type="button" class="form-chip" onclick="toggleChip(this,'recruit','target')">무관</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>급여 / 조건</label>
+          <input type="text" id="input-salary" placeholder="예) 월 250만원 이상 / 협의 가능">
+        </div>
+        <div class="form-group">
+          <label>상세 내용 <span style="color:var(--red)">*</span></label>
+          <textarea id="input-body-r" placeholder="클럽 소개, 우대 사항, 필요 자격증, 근무 시간 등을 적어주세요."></textarea>
+        </div>
+        <div class="form-group">
+          <label>지원 방법</label>
+          <input type="text" id="input-contact-r" placeholder="예) 이메일 / 오픈카톡 / 댓글 문의">
+        </div>
+      </div>
+
       <div class="write-actions">
         <button class="cancel-btn" onclick="goList()">취소</button>
-        <button class="submit-btn" onclick="submitPost()">등록</button>
+        <button class="submit-btn" id="write-submit-btn" onclick="submitPost()" style="display:none">등록</button>
       </div>
     </div>
   </div>
@@ -346,6 +537,9 @@ let currentPost = null;
 let currentPage = 1;
 let editingPostId = null;
 let isLoginMode = true;
+let currentTab = 'all';
+let currentSearch = '';
+let writeCat = null;
 const PAGE_SIZE = 20;
 
 /* ─── 유틸 ─── */
@@ -368,9 +562,9 @@ function showToast(msg) {
 }
 function showView(name) {
   ['list','post','write'].forEach(v => {
-    document.getElementById('view-' + v).style.display = v === name ? 'block' : 'none';
+    document.getElementById('view-' + v).style.display = v === name ? '' : 'none';
   });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 56, behavior: 'smooth' });
 }
 
 /* ─── 인증 ─── */
@@ -529,60 +723,65 @@ async function loadPosts() {
   const from = (currentPage - 1) * PAGE_SIZE;
   const to   = from + PAGE_SIZE - 1;
 
-  try {
-    const { data: posts, error, count } = await sb
-      .from('posts')
-      .select('id, title, content, created_at, views, likes, author_id', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(from, to);
+  let query = sb
+    .from('posts')
+    .select(`*, profiles(username), comments(count)`, { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, to);
 
-    if (error) throw error;
-    if (!posts || posts.length === 0) {
-      body.innerHTML = `<div class="empty-board">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg>
-        <p>아직 게시글이 없어요.<br>첫 번째 글을 작성해보세요!</p>
-      </div>`;
-      return;
-    }
+  if (currentTab !== 'all') query = query.eq('category', currentTab);
+  if (currentSearch) query = query.ilike('title', `%${currentSearch}%`);
 
-    // 작성자 username 별도 조회
-    const authorIds = [...new Set(posts.map(p => p.author_id))];
-    const { data: profiles } = await sb.from('profiles').select('id, username').in('id', authorIds);
-    const profileMap = {};
-    (profiles || []).forEach(p => { profileMap[p.id] = p.username; });
+  const { data: posts, error, count } = await query;
 
-    // 댓글 수 별도 조회
-    const postIds = posts.map(p => p.id);
-    const { data: commentCounts } = await sb.from('comments').select('post_id').in('post_id', postIds);
-    const countMap = {};
-    (commentCounts || []).forEach(c => { countMap[c.post_id] = (countMap[c.post_id] || 0) + 1; });
+  if (error || !posts) { body.innerHTML = '<div class="loading">오류가 발생했어요</div>'; return; }
 
-    const isNew = d => (Date.now() - new Date(d)) < 86400000;
-
-    body.innerHTML = posts.map(p => `
-      <div class="post-row" onclick="loadPost(${p.id})">
-        <div class="post-title">
-          <span class="post-title-text">${escHtml(p.title)}</span>
-          ${isNew(p.created_at) ? '<span class="new-badge">NEW</span>' : ''}
-        </div>
-        <div class="post-author">${escHtml(profileMap[p.author_id] || '알수없음')}</div>
-        <div class="post-stat">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          ${p.views || 0}
-        </div>
-        <div class="post-stat">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          ${countMap[p.id] || 0}
-        </div>
-      </div>`).join('');
-
-    renderPagination(count);
-    loadPopular();
-
-  } catch(e) {
-    console.error('게시판 오류:', e);
-    body.innerHTML = `<div class="loading">오류가 발생했어요 (${e.message || '알 수 없는 오류'})</div>`;
+  if (posts.length === 0) {
+    body.innerHTML = `<div class="empty-board">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg>
+      <p>아직 게시글이 없어요.<br>첫 번째 글을 작성해보세요!</p>
+    </div>`;
+    renderPagination(0);
+    return;
   }
+
+  const isNew = (d) => (Date.now() - new Date(d)) < 3600 * 24 * 1000;
+
+  function catBadge(cat) {
+    if (cat === 'open')    return '<span class="cat-badge cat-badge-open">오픈 피스트</span>';
+    if (cat === 'recruit') return '<span class="cat-badge cat-badge-recruit">클럽 구인</span>';
+    return '';
+  }
+
+  function ddayBadge(post) {
+    if (post.category !== 'open' || !post.event_date) return '';
+    const diff = Math.ceil((new Date(post.event_date) - Date.now()) / 86400000);
+    if (diff < 0) return '';
+    if (diff === 0) return '<span class="dday-badge">D-DAY</span>';
+    return `<span class="dday-badge">D-${diff}</span>`;
+  }
+
+  body.innerHTML = posts.map(p => `
+    <div class="post-row" onclick="loadPost(${p.id})">
+      <div class="post-title">
+        ${catBadge(p.category)}
+        <span class="post-title-text">${escHtml(p.title)}</span>
+        ${isNew(p.created_at) ? '<span class="new-badge">NEW</span>' : ''}
+        ${ddayBadge(p)}
+      </div>
+      <div class="post-author">${escHtml(p.profiles?.username || '알수없음')}</div>
+      <div class="post-stat">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        ${p.views || 0}
+      </div>
+      <div class="post-stat">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        ${p.comments?.[0]?.count || 0}
+      </div>
+    </div>`).join('');
+
+  renderPagination(count);
+  loadPopular();
 }
 
 function renderPagination(total) {
@@ -632,20 +831,16 @@ async function loadPost(id) {
   await sb.rpc('increment_views', { post_id: id });
 
   const { data: post } = await sb.from('posts')
-    .select('*')
+    .select('*, profiles(username)')
     .eq('id', id)
     .single();
 
   if (!post) { showToast('글을 불러오지 못했어요'); goList(); return; }
-
-  // 작성자 username 조회
-  const { data: author } = await sb.from('profiles').select('username').eq('id', post.author_id).single();
-  post._username = author?.username || '알수없음';
   currentPost = post;
 
   document.getElementById('detail-title').textContent  = post.title;
   document.getElementById('detail-body').textContent   = post.content;
-  document.getElementById('detail-author').textContent = post._username;
+  document.getElementById('detail-author').textContent = post.profiles?.username || '알수없음';
   document.getElementById('detail-date').textContent   = timeAgo(post.created_at);
   document.getElementById('detail-views').textContent  = `조회 ${post.views || 0}`;
   document.getElementById('like-count').textContent    = post.likes || 0;
@@ -672,24 +867,16 @@ async function loadPost(id) {
 }
 
 async function loadComments(postId) {
-  const { data: comments } = await sb.from('comments')
-    .select('id, content, created_at, author_id')
+  const { data } = await sb.from('comments')
+    .select('*, profiles(username)')
     .eq('post_id', postId)
     .order('created_at', { ascending: true });
 
-  // 작성자 username 일괄 조회
-  const authorIds = [...new Set((comments||[]).map(c => c.author_id))];
-  const profileMap = {};
-  if (authorIds.length) {
-    const { data: profiles } = await sb.from('profiles').select('id, username').in('id', authorIds);
-    (profiles||[]).forEach(p => { profileMap[p.id] = p.username; });
-  }
-
-  document.getElementById('comments-title').textContent = `댓글 ${comments?.length || 0}`;
-  document.getElementById('comment-list').innerHTML = (comments||[]).map(c => `
+  document.getElementById('comments-title').textContent = `댓글 ${data?.length || 0}`;
+  document.getElementById('comment-list').innerHTML = (data||[]).map(c => `
     <div class="comment-item" id="c-${c.id}">
       <div class="comment-header">
-        <span class="comment-author">${escHtml(profileMap[c.author_id] || '알수없음')}</span>
+        <span class="comment-author">${escHtml(c.profiles?.username || '알수없음')}</span>
         <span style="display:flex;align-items:center;gap:6px">
           <span class="comment-date">${timeAgo(c.created_at)}</span>
           ${currentUser?.id === c.author_id ? `<button class="comment-del" onclick="deleteComment(${c.id})">삭제</button>` : ''}
@@ -739,45 +926,140 @@ async function toggleLike() {
   document.getElementById('like-count').textContent = currentPost.likes;
 }
 
+/* ─── 탭 & 검색 ─── */
+function switchTab(tab) {
+  currentTab = tab;
+  currentPage = 1;
+  ['all','open','recruit'].forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if (el) el.className = 'board-tab' + (t === tab ? ` active-${t}` : '');
+  });
+  loadPosts();
+}
+
+function doSearch() {
+  currentSearch = document.getElementById('search-input').value.trim();
+  currentPage = 1;
+  loadPosts();
+}
+
+/* ─── 글쓰기 카테고리 선택 ─── */
+function selectWriteCat(cat) {
+  writeCat = cat;
+  document.getElementById('cs-open').className    = 'cat-select-btn' + (cat === 'open'    ? ' sel-open'    : '');
+  document.getElementById('cs-recruit').className = 'cat-select-btn' + (cat === 'recruit' ? ' sel-recruit' : '');
+  document.getElementById('form-open').style.display    = cat === 'open'    ? '' : 'none';
+  document.getElementById('form-recruit').style.display = cat === 'recruit' ? '' : 'none';
+  document.getElementById('write-submit-btn').style.display = '';
+}
+
+function toggleChip(el, cat) {
+  el.classList.toggle('sel-' + cat);
+}
+
+function getSelectedChips(groupId) {
+  return Array.from(document.querySelectorAll(`#${groupId} .form-chip.sel-open, #${groupId} .form-chip.sel-recruit`))
+    .map(c => c.textContent).join(', ');
+}
+
 /* ─── 글쓰기 / 수정 ─── */
 function goWrite() {
-  if (!currentUser) {
-    showAuth('login');
-    return;
-  }
+  if (!currentUser) { showAuth('login'); return; }
   editingPostId = null;
+  writeCat = null;
   document.getElementById('write-title').textContent = '새 글 작성';
-  document.getElementById('input-title').value = '';
-  document.getElementById('input-body').value = '';
+  document.getElementById('cat-select-section').style.display = '';
+  document.getElementById('form-open').style.display = 'none';
+  document.getElementById('form-recruit').style.display = 'none';
+  document.getElementById('write-submit-btn').style.display = 'none';
+  document.getElementById('cs-open').className = 'cat-select-btn';
+  document.getElementById('cs-recruit').className = 'cat-select-btn';
+  // 필드 초기화
+  ['input-title','input-location','input-contact','input-salary','input-contact-r','input-region'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['input-body','input-body-r'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['input-weapon','input-job-type','input-work-type'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const dateEl = document.getElementById('input-event-date'); if (dateEl) dateEl.value = '';
+  const timeEl = document.getElementById('input-event-time'); if (timeEl) timeEl.value = '';
+  const maxEl  = document.getElementById('input-max-participants'); if (maxEl) maxEl.value = '';
+  document.querySelectorAll('.form-chip').forEach(c => c.classList.remove('sel-open','sel-recruit'));
   showView('write');
-  window.scrollTo({ top: 0 });
 }
 
 function editPost() {
   editingPostId = currentPost.id;
+  writeCat = currentPost.category || 'open';
   document.getElementById('write-title').textContent = '글 수정';
-  document.getElementById('input-title').value = currentPost.title;
-  document.getElementById('input-body').value = currentPost.content;
+  document.getElementById('cat-select-section').style.display = 'none';
+  selectWriteCat(writeCat);
+  if (writeCat === 'open') {
+    document.getElementById('input-title').value = currentPost.title;
+    document.getElementById('input-body').value  = currentPost.content;
+    if (currentPost.event_date) document.getElementById('input-event-date').value = currentPost.event_date.slice(0,10);
+    if (currentPost.location)   document.getElementById('input-location').value   = currentPost.location;
+    if (currentPost.weapon)     document.getElementById('input-weapon').value      = currentPost.weapon;
+    if (currentPost.contact)    document.getElementById('input-contact').value     = currentPost.contact;
+  } else {
+    document.getElementById('input-title-r').value = currentPost.title;
+    document.getElementById('input-body-r').value  = currentPost.content;
+    if (currentPost.job_type)  document.getElementById('input-job-type').value  = currentPost.job_type;
+    if (currentPost.work_type) document.getElementById('input-work-type').value = currentPost.work_type;
+    if (currentPost.region)    document.getElementById('input-region').value    = currentPost.region;
+    if (currentPost.salary)    document.getElementById('input-salary').value    = currentPost.salary;
+    if (currentPost.contact)   document.getElementById('input-contact-r').value = currentPost.contact;
+  }
   showView('write');
 }
 
 async function submitPost() {
   if (!currentUser) { showAuth('login'); return; }
-  const title   = document.getElementById('input-title').value.trim();
-  const content = document.getElementById('input-body').value.trim();
-  if (!title)   { showToast('제목을 입력해주세요'); return; }
-  if (!content) { showToast('내용을 입력해주세요'); return; }
+  if (!writeCat) { showToast('카테고리를 선택해주세요'); return; }
+
+  let title, content, extra = {};
+
+  if (writeCat === 'open') {
+    title   = (document.getElementById('input-title').value || '').trim();
+    content = (document.getElementById('input-body').value  || '').trim();
+    const weapon    = document.getElementById('input-weapon').value;
+    const eventDate = document.getElementById('input-event-date').value;
+    const eventTime = document.getElementById('input-event-time').value;
+    const location  = (document.getElementById('input-location').value || '').trim();
+    const maxP      = document.getElementById('input-max-participants').value;
+    const contact   = (document.getElementById('input-contact').value || '').trim();
+    const level     = getSelectedChips('level-chips');
+    if (!title)     { showToast('제목을 입력해주세요'); return; }
+    if (!eventDate) { showToast('날짜를 입력해주세요'); return; }
+    if (!location)  { showToast('장소를 입력해주세요'); return; }
+    extra = { category: 'open', weapon, event_date: eventDate + (eventTime ? 'T' + eventTime : ''), location, max_participants: maxP ? parseInt(maxP) : null, level, contact };
+  } else {
+    title   = (document.getElementById('input-title-r').value || '').trim();
+    content = (document.getElementById('input-body-r').value  || '').trim();
+    const jobType  = document.getElementById('input-job-type').value;
+    const workType = document.getElementById('input-work-type').value;
+    const region   = (document.getElementById('input-region').value || '').trim();
+    const salary   = (document.getElementById('input-salary').value  || '').trim();
+    const contact  = (document.getElementById('input-contact-r').value || '').trim();
+    if (!title)   { showToast('제목을 입력해주세요'); return; }
+    if (!region)  { showToast('지역을 입력해주세요'); return; }
+    if (!content) { showToast('상세 내용을 입력해주세요'); return; }
+    extra = { category: 'recruit', job_type: jobType, work_type: workType, region, salary, contact };
+  }
 
   if (editingPostId) {
     const { error } = await sb.from('posts')
-      .update({ title, content, updated_at: new Date().toISOString() })
+      .update({ title, content, updated_at: new Date().toISOString(), ...extra })
       .eq('id', editingPostId);
     if (error) { showToast('수정 실패'); return; }
     showToast('수정됐어요!');
     loadPost(editingPostId);
   } else {
     const { data, error } = await sb.from('posts')
-      .insert({ title, content, author_id: currentUser.id })
+      .insert({ title, content, author_id: currentUser.id, ...extra })
       .select().single();
     if (error) { showToast('등록 실패'); return; }
     showToast('글이 등록됐어요!');
