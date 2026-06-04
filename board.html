@@ -846,10 +846,42 @@ async function loadPost(id) {
   currentPost = post;
 
   document.getElementById('detail-title').textContent  = post.title;
-  document.getElementById('detail-body').textContent   = post.content;
   document.getElementById('detail-author').textContent = post.profiles?.username || '알수없음';
   document.getElementById('detail-date').textContent   = timeAgo(post.created_at);
   document.getElementById('detail-views').textContent  = `조회 ${post.views || 0}`;
+
+  // 카테고리 메타 + 본문 렌더링
+  let metaHtml = '';
+  if (post.category === 'open') {
+    const items = [
+      post.weapon   ? ['종목', post.weapon] : null,
+      post.event_date ? ['날짜', new Date(post.event_date).toLocaleString('ko-KR',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})] : null,
+      post.location ? ['장소', post.location] : null,
+      post.max_participants ? ['모집 인원', post.max_participants + '명'] : null,
+      post.level    ? ['수준', post.level] : null,
+      post.contact  ? ['연락 방법', post.contact] : null,
+    ].filter(Boolean);
+    if (items.length) {
+      metaHtml = `<div style="background:var(--blue-bg);border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
+        ${items.map(([k,v]) => `<div style="display:flex;gap:12px;font-size:13px"><span style="color:var(--muted);min-width:72px">${k}</span><span style="color:var(--ink);font-weight:500">${escHtml(String(v))}</span></div>`).join('')}
+      </div>`;
+    }
+  } else if (post.category === 'recruit') {
+    const items = [
+      post.job_type  ? ['직종', post.job_type] : null,
+      post.work_type ? ['근무 형태', post.work_type] : null,
+      post.region    ? ['지역', post.region] : null,
+      post.salary    ? ['급여 / 조건', post.salary] : null,
+      post.contact   ? ['지원 방법', post.contact] : null,
+    ].filter(Boolean);
+    if (items.length) {
+      metaHtml = `<div style="background:#F5EEE8;border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
+        ${items.map(([k,v]) => `<div style="display:flex;gap:12px;font-size:13px"><span style="color:var(--muted);min-width:72px">${k}</span><span style="color:var(--ink);font-weight:500">${escHtml(String(v))}</span></div>`).join('')}
+      </div>`;
+    }
+  }
+  const bodyEl = document.getElementById('detail-body');
+  bodyEl.innerHTML = metaHtml + (post.content ? `<div style="white-space:pre-wrap;word-break:keep-all">${escHtml(post.content)}</div>` : '');
   document.getElementById('like-count').textContent    = post.likes || 0;
 
   // 내 글이면 수정/삭제 버튼
