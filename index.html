@@ -493,7 +493,7 @@
 <!-- Nav -->
 <nav class="nav">
   <div class="nav-inner">
-    <a href="index.html" class="nav-logo">MAISON <em>de</em> FENCING</a>
+    <a href="index.html" class="nav-logo">🐰 MAISON <em>de</em> FENCING</a>
     <div class="nav-links">
       <a href="index.html" class="active">홈</a>
       <a href="rules.html" >규정 검색</a>
@@ -515,7 +515,7 @@
   <div class="hero-inner">
     <div class="hero-left">
       <h1>MAISON<br><em>de</em><br>FENCING</h1>
-      <p class="hero-sub">펜싱을 좋아하는 사람들의 모임</p>
+      <p class="hero-sub">메종드펜싱 &nbsp;·&nbsp; 펜싱을 좋아하는 사람들의 모임</p>
     </div>
     <div class="hero-stats">
       <div class="stat">
@@ -663,7 +663,8 @@
 
 <!-- Footer -->
 <footer class="footer">
-  <strong>MAISON DE FENCING</strong> &mdash; 메종드펜싱 &copy; 2025 &nbsp;·&nbsp; 규정 출처: 대한펜싱협회 &nbsp;·&nbsp; 문의: admin@maisonfencing.kr
+  <strong>MAISON DE FENCING</strong> &mdash; 메종드펜싱 &copy; 2026 &nbsp;·&nbsp; 규정 출처: 대한펜싱협회 &nbsp;·&nbsp; 문의: llllljbong@naver.com
+  <br><span style="color:rgba(245,242,236,0.25);font-size:11px;margin-top:6px;display:block">made by <strong style="color:rgba(245,242,236,0.5)">@Fencer.rabbit</strong></span>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -691,24 +692,30 @@ function formatCount(n) {
 async function loadMemes() {
   const grid = document.getElementById('meme-grid');
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;font-size:12px;color:var(--muted)">로딩 중...</div>';
+
+  // rss2json — Reddit RSS를 JSON으로 변환해주는 무료 공개 API
+  const rssUrl = 'https://www.reddit.com/r/fencing/top/.rss?limit=30&t=week';
+  const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
+
   try {
-    const target = 'https://www.reddit.com/r/fencing/top.json?limit=30&t=week';
-    const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(target));
-    if (!res.ok) throw new Error('allorigins ' + res.status);
-    const wrapper = await res.json();
-    const data = JSON.parse(wrapper.contents);
-    const posts = data.data.children
-      .map(c => c.data)
-      .filter(p => p.thumbnail && p.thumbnail.startsWith('http'))
-      .slice(0, 6);
-    if (!posts.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;font-size:12px;color:var(--muted)">현재 이미지 게시물이 없어요</div>';
-      return;
-    }
+    const res = await fetch(apiUrl, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('rss2json ' + res.status);
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error('rss2json status: ' + data.status);
+
+    // 썸네일 추출 — description 안의 img src 파싱
+    const posts = (data.items || []).map(item => {
+      const match = item.description?.match(/<img[^>]+src="([^"]+)"/);
+      const thumb = match ? match[1] : null;
+      return { title: item.title, link: item.link, thumb };
+    }).filter(p => p.thumb && !p.thumb.includes('external-preview')).slice(0, 6);
+
+    if (!posts.length) throw new Error('no images');
+
     grid.innerHTML = posts.map(p => `
-      <a href="https://reddit.com${esc(p.permalink)}" target="_blank" rel="noopener" class="meme-card">
+      <a href="${esc(p.link)}" target="_blank" rel="noopener" class="meme-card">
         <div class="meme-thumb">
-          <img src="${esc(p.thumbnail)}" alt="${esc(p.title)}" loading="lazy"
+          <img src="${esc(p.thumb)}" alt="${esc(p.title)}" loading="lazy"
             style="width:100%;height:100%;object-fit:cover"
             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div style="display:none;align-items:center;justify-content:center;height:100%;font-size:36px">🤺</div>
@@ -716,15 +723,13 @@ async function loadMemes() {
         </div>
         <div class="meme-meta">
           <span class="meme-sub-source">r/fencing</span>
-          <span class="meme-likes">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg>
-            ${formatCount(p.ups)}
-          </span>
+          <span class="meme-likes" style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${esc(p.title.slice(0,30))}…</span>
         </div>
       </a>`).join('');
+
   } catch(e) {
+    console.warn('loadMemes failed:', e);
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;font-size:12px;color:var(--muted)">피드를 불러오지 못했어요 — <a href="feed.html" style="color:var(--blue)">피드 페이지</a>에서 확인하세요</div>';
-    console.warn('Reddit loadMemes failed:', e);
   }
 }
 
