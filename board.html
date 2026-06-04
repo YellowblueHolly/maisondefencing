@@ -249,7 +249,7 @@
           <button class="board-tab" id="tab-recruit" onclick="switchTab('recruit')">🏛 클럽 구인 & 홍보</button>
         </div>
         <div class="board-search">
-          <input type="text" id="search-input" placeholder="제목 또는 지역으로 검색" autocomplete="off" onkeydown="if(event.key==='Enter')doSearch()" />
+          <input type="text" id="search-input" placeholder="제목 또는 지역으로 검색" autocomplete="off" name="board-search" onkeydown="if(event.key==='Enter')doSearch()" />
           <button onclick="doSearch()">검색</button>
         </div>
         <div class="post-table-header">
@@ -523,7 +523,15 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ─── Supabase 초기화 ─── */
+// 페이지 로드 즉시 검색창 비우기 (브라우저 autofill 방지)
+document.addEventListener('DOMContentLoaded', () => {
+  const si = document.getElementById('search-input');
+  if (si) si.value = '';
+});
+setTimeout(() => {
+  const si = document.getElementById('search-input');
+  if (si) si.value = '';
+}, 100);
 const SUPABASE_URL = 'https://ldqpimpauuqgxrqteswy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AtP1YZ-SG-VJ8dSYQnOHww_1z3cZxrw';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1057,10 +1065,9 @@ async function submitPost() {
     showToast('수정됐어요!');
     loadPost(editingPostId);
   } else {
-    const { data, error } = await sb.from('posts')
-      .insert({ title, content, author_id: currentUser.id, ...extra })
-      .select().single();
-    if (error) { showToast('등록 실패'); return; }
+    const { error } = await sb.from('posts')
+      .insert({ title, content, author_id: currentUser.id, ...extra });
+    if (error) { showToast('등록 실패: ' + error.message); return; }
     showToast('글이 등록됐어요!');
     currentPage = 1;
     goList();
