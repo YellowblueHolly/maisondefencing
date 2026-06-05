@@ -829,20 +829,32 @@ async function loadPosts() {
   const from = (currentPage - 1) * PAGE_SIZE;
   const to   = from + PAGE_SIZE - 1;
 
+  // 공지 별도 조회 (전체/공지 탭일 때만, 1페이지만)
+  let noticePosts = [];
+  if ((currentTab === 'all' || currentTab === 'notice') && currentPage === 1) {
+    const { data: nd } = await sb
+      .from('posts')
+      .select(`*, profiles!posts_author_id_fkey(username, points, role), comments(count)`)
+      .eq('category', 'notice')
+      .order('created_at', { ascending: false });
+    noticePosts = nd || [];
+  }
+
   let query = sb
     .from('posts')
     .select(`*, profiles!posts_author_id_fkey(username, points, role), comments(count)`, { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to);
 
-  if (currentTab !== 'all') query = query.eq('category', currentTab);
+  if (currentTab === 'all') query = query.neq('category', 'notice');
+  else if (currentTab !== 'all') query = query.eq('category', currentTab);
   if (currentSearch) query = query.ilike('title', `%${currentSearch}%`);
 
   const { data: posts, error, count } = await query;
 
   if (error || !posts) { body.innerHTML = '<div class="loading">오류가 발생했어요</div>'; return; }
 
-  if (posts.length === 0) {
+  if (posts.length === 0 && noticePosts.length === 0) {
     body.innerHTML = `<div class="empty-board">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg>
       <p>아직 게시글이 없어요.<br>첫 번째 글을 작성해보세요!</p>
@@ -869,11 +881,18 @@ async function loadPosts() {
     return `<span class="dday-badge">D-${diff}</span>`;
   }
 
-  body.innerHTML = posts.map(p => {
+  function renderRow(p, isPinned = false) {
     const commentCount = p.comments?.[0]?.count || 0;
+    const grade = getGrade(p.profiles?.points, p.profiles?.role);
+    const icon = grade.label.split(' ')[0];
+    const isAdmin = p.profiles?.role === 'admin';
+    const isVip = p.profiles?.points >= 1000 && !isAdmin;
+    const cls = isAdmin ? 'author-admin' : isVip ? 'author-vip' : '';
+    const pinnedStyle = isPinned ? 'background:rgba(255,243,205,0.4);border-left:3px solid #856404;' : '';
     return `
-    <div class="post-row" onclick="loadPost(${p.id})">
+    <div class="post-row" onclick="loadPost(${p.id})" style="${pinnedStyle}">
       <div class="post-title">
+        ${isPinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="#856404" style="margin-right:4px;flex-shrink:0"><path d="M12 2L8 6H4l2 5-4 4h6v7l4-7 4 7v-7h6l-4-4 2-5h-4z"/></svg>' : ''}
         ${catBadge(p.category)}
         <span class="post-title-text">${escHtml(p.title)}</span>
         ${commentCount > 0 ? `<span style="font-size:12px;color:var(--red);font-weight:500;margin-left:3px">[${commentCount}]</span>` : ''}
@@ -881,21 +900,24 @@ async function loadPosts() {
         ${ddayBadge(p)}
       </div>
       <div class="post-author">
-        ${(() => {
-          const grade = getGrade(p.profiles?.points, p.profiles?.role);
-          const icon = grade.label.split(' ')[0];
-          const isAdmin = p.profiles?.role === 'admin';
-          const isVip = p.profiles?.points >= 1000 && !isAdmin;
-          const cls = isAdmin ? 'author-admin' : isVip ? 'author-vip' : '';
-          return `<span style="margin-right:3px">${icon}</span><span class="${cls}">${escHtml(p.profiles?.username || '알수없음')}</span>`;
-        })()}
+        <span style="margin-right:3px">${icon}</span><span class="${cls}">${escHtml(p.profiles?.username || '알수없음')}</span>
       </div>
       <div class="post-stat">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         ${p.views || 0}
       </div>
     </div>`;
-  }).join('');
+  }
+
+  const noticeHtml = noticePosts.map(p => renderRow(p, true)).join('');
+  const postHtml   = posts.map(p => renderRow(p, false)).join('');
+
+  // 공지와 일반글 사이 구분선
+  const divider = (noticePosts.length > 0 && posts.length > 0)
+    ? '<div style="border-top:2px dashed var(--border);margin:0"></div>'
+    : '';
+
+  body.innerHTML = noticeHtml + divider + postHtml;
 
   renderPagination(count);
   loadPopular();
