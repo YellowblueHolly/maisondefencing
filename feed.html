@@ -423,38 +423,46 @@ async function loadReddit() {
   }
 }
 
-/* ── FIE 뉴스 로드 ── */
+/* ── FIE/USA Fencing 뉴스 로드 ── */
 async function loadFIE() {
-  const rssUrl = 'https://fie.org/news/rss';
-  const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
-  try {
-    const res = await fetch(apiUrl);
-    if (!res.ok) throw new Error('FIE rss2json ' + res.status);
-    const data = await res.json();
-    if (data.status !== 'ok') throw new Error('FIE status: ' + data.status);
+  const feeds = [
+    { url: 'https://www.usafencing.org/news.rss', label: 'USA Fencing' },
+    { url: 'https://fie.org/media/news.rss', label: 'FIE' },
+  ];
 
-    const items = (data.items || []).slice(0, 20).map(item => {
-      const imgMatch = item.description?.match(/<img[^>]+src="([^"]+)"/);
-      const thumb = imgMatch ? imgMatch[1] : '';
-      return {
-        id: 'fie-' + encodeURIComponent(item.link),
-        source: 'fie',
-        type: thumb ? 'image' : 'text',
-        title: item.title,
-        thumbnail: thumb || '',
-        url: item.link,
-        author: 'FIE',
-        likes: 0,
-        date: item.pubDate || new Date().toISOString(),
-      };
-    });
+  for (const feed of feeds) {
+    try {
+      const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feed.url);
+      const res = await fetch(apiUrl);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.status !== 'ok' || !data.items?.length) continue;
 
-    allItems = allItems.filter(i => !i.id.startsWith('fie-'));
-    allItems.push(...items);
-    console.log('FIE: ' + items.length + '개 로드됨');
-  } catch(e) {
-    console.warn('FIE 로드 실패:', e.message);
+      const items = data.items.slice(0, 15).map(item => {
+        const imgMatch = item.description?.match(/<img[^>]+src="([^"]+)"/);
+        const thumb = imgMatch ? imgMatch[1] : '';
+        return {
+          id: 'fie-' + encodeURIComponent(item.link),
+          source: 'fie',
+          type: thumb ? 'image' : 'text',
+          title: item.title,
+          thumbnail: thumb || '',
+          url: item.link,
+          author: feed.label,
+          likes: 0,
+          date: item.pubDate || new Date().toISOString(),
+        };
+      });
+
+      allItems = allItems.filter(i => !i.id.startsWith('fie-'));
+      allItems.push(...items);
+      console.log(feed.label + ': ' + items.length + '개 로드됨');
+      return;
+    } catch(e) {
+      continue;
+    }
   }
+  console.warn('FIE/USA Fencing 로드 실패');
 }
 
 /* ── YouTube 로드 ── */
