@@ -792,6 +792,19 @@ const SUPABASE_URL = 'https://ldqpimpauuqgxrqteswy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AtP1YZ-SG-VJ8dSYQnOHww_1z3cZxrw';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+function getGrade(points) {
+  const p = points || 0;
+  if (p >= 1000) return { label: '👑 VIP 펜서',   cls: 'grade-4' };
+  if (p >= 500)  return { label: '🏅 네임드 펜서', cls: 'grade-3' };
+  if (p >= 200)  return { label: '⚔️ 펜서',        cls: 'grade-2' };
+  if (p >= 50)   return { label: '⚪ 입문 펜서',   cls: 'grade-1' };
+  return         { label: '🌱 새싹 펜서',          cls: 'grade-0' };
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -1022,13 +1035,28 @@ async function initAuthWidget() {
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (session?.user) {
-      const { data: profile } = await sb.from('profiles').select('username').eq('id', session.user.id).single();
+      const { data: profile } = await sb.from('profiles').select('username, points, role').eq('id', session.user.id).single();
       const username = profile?.username || session.user.email?.split('@')[0] || '펜서';
+      const grade = getGrade(profile?.points);
+
+      // nav 버튼 교체
+      const navRight = document.querySelector('.nav-right');
+      if (navRight) {
+        navRight.innerHTML = `
+          <span style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;padding:1px 7px;border-radius:20px;font-weight:500;background:#e8f5e9;color:#2e7d32">${grade.label}</span>
+            <strong style="color:var(--ink)">${escHtml(username)}</strong> 님
+            <span style="font-size:11px;color:var(--muted)">${profile?.points || 0}P</span>
+          </span>
+          <button onclick="sb.auth.signOut().then(()=>location.reload())" style="font-size:13px;padding:6px 14px;border-radius:6px;border:1px solid rgba(28,26,23,0.2);background:transparent;color:#6B6760;cursor:pointer">로그아웃</button>`;
+      }
+
+      // 사이드 위젯
       document.getElementById('widget-guest').style.display = 'none';
       document.getElementById('widget-user').style.display = '';
       document.getElementById('widget-username').textContent = username + ' 님';
     }
-  } catch(e) {}
+  } catch(e) { console.warn('initAuthWidget error:', e); }
 }
 
 loadStats();

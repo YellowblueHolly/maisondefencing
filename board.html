@@ -1096,11 +1096,12 @@ function goWrite() {
   document.getElementById('write-submit-btn').style.display = 'none';
   document.getElementById('cs-open').className = 'cat-select-btn';
   document.getElementById('cs-recruit').className = 'cat-select-btn';
+  document.getElementById('cs-community').className = 'cat-select-btn';
   // 필드 초기화
-  ['input-title','input-location','input-contact','input-salary','input-contact-r','input-region'].forEach(id => {
+  ['input-title','input-location','input-contact','input-salary','input-contact-r','input-region','input-title-c'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  ['input-body','input-body-r'].forEach(id => {
+  ['input-body','input-body-r','input-body-c'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   ['input-weapon','input-job-type','input-work-type'].forEach(id => {
