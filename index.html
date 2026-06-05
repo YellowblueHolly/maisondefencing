@@ -648,7 +648,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
       </svg>
-      <input type="text" placeholder="경기규칙, 판정, 장비 규격, 조문 번호로 검색..." id="main-search">
+      <input type="text" placeholder="경기규칙, 판정, 장비 규격, 조문 번호로 검색..." id="main-search" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" name="rule-search">
     </div>
     <div class="search-tags">
       <button class="tag tag-blue" onclick="goSearch('플뢰레')">플뢰레</button>
@@ -1083,6 +1083,9 @@ let glossaryData = [];
 fetch('glossary.json').then(r=>r.json()).then(d=>{ glossaryData=d; }).catch(()=>{});
 
 const mainSearchInput = document.getElementById('main-search');
+// 브라우저 autofill 방지
+document.addEventListener('DOMContentLoaded', () => { if (mainSearchInput) mainSearchInput.value = ''; });
+setTimeout(() => { if (mainSearchInput) mainSearchInput.value = ''; }, 100);
 let hintBox = null;
 
 mainSearchInput.addEventListener('input', e => {
