@@ -199,9 +199,6 @@
     <button class="chip" id="chip-reddit" onclick="setFilter('reddit')">
       <span class="chip-dot dot-reddit"></span> Reddit
     </button>
-    <button class="chip" id="chip-fie" onclick="setFilter('fie')">
-      <span class="chip-dot" style="background:#003087"></span> FIE
-    </button>
     <button class="chip" id="chip-youtube" onclick="setFilter('youtube')">
       <span class="chip-dot" style="background:var(--youtube)"></span> YouTube
     </button>
@@ -562,7 +559,7 @@ async function loadUserMemes() {
 async function loadAll() {
   document.getElementById('feed-status').textContent = '피드 로딩 중...';
   document.getElementById('masonry').innerHTML = '';
-  await Promise.allSettled([loadReddit(), loadFIE(), loadUserMemes(), loadYouTube()]);
+  await Promise.allSettled([loadReddit(), loadUserMemes(), loadYouTube()]);
   applyFilterSort();
 }
 
@@ -570,7 +567,6 @@ async function loadAll() {
 function applyFilterSort() {
   let items = [...allItems];
   if (currentFilter === 'reddit')  items = items.filter(i => i.source === 'reddit');
-  else if (currentFilter === 'fie')  items = items.filter(i => i.source === 'fie');
   if (currentFilter === 'youtube') items = items.filter(i => i.source === 'youtube');
   if (currentFilter === 'user')    items = items.filter(i => i.source === 'user');
   if (currentSort === 'top') items.sort((a,b) => (b.likes||0) - (a.likes||0));
@@ -582,7 +578,7 @@ function applyFilterSort() {
 
 function setFilter(f) {
   currentFilter = f;
-  ['all','reddit','fie','youtube','user'].forEach(k => document.getElementById('chip-'+k)?.classList.remove('active'));
+  ['all','reddit','youtube','user'].forEach(k => document.getElementById('chip-'+k)?.classList.remove('active'));
   document.getElementById('chip-'+f).classList.add('active');
   applyFilterSort();
 }
