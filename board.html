@@ -727,7 +727,19 @@ async function submitAuth() {
   try {
     if (isLoginMode) {
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) { showErr('이메일 또는 비밀번호가 올바르지 않아요'); resetBtn(); return; }
+      if (error) {
+        if (error.message === 'Email not confirmed') {
+          errEl.innerHTML = `이메일 인증이 필요해요.<br>
+            <button onclick="resendConfirmEmail('${email}')"
+              style="margin-top:8px;padding:6px 14px;background:#C0392B;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:var(--font-body)">
+              인증 메일 재전송
+            </button>`;
+          errEl.classList.add('show');
+        } else {
+          showErr('이메일 또는 비밀번호가 올바르지 않아요');
+        }
+        resetBtn(); return;
+      }
       closeAuth();
       showToast('✅ 로그인 됐어요!');
       loadPosts();
@@ -767,6 +779,16 @@ async function submitAuth() {
     console.error('submitAuth error:', e);
     showErr('오류가 발생했어요. 잠시 후 다시 시도해주세요.');
     resetBtn();
+  }
+}
+
+async function resendConfirmEmail(email) {
+  const { error } = await sb.auth.resend({ type: 'signup', email });
+  if (error) {
+    showToast('재전송 실패: ' + error.message);
+  } else {
+    showToast('📧 인증 메일을 재전송했어요!');
+    document.getElementById('auth-error').classList.remove('show');
   }
 }
 
