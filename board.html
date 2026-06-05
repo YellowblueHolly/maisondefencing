@@ -657,9 +657,8 @@ function clearUser() {
 function renderNavAuth() {
   const el = document.getElementById('nav-auth');
   if (currentProfile) {
+    const grade = getGrade(currentProfile.points);
     el.innerHTML = `
-      const grade = getGrade(currentProfile.points);
-      navAuth.innerHTML = `
       <span class="user-chip">
         <span class="grade-badge ${grade.cls}">${grade.label}</span>
         <strong>${escHtml(currentProfile.username)}</strong> 님
