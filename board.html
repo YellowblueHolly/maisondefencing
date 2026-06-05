@@ -197,7 +197,12 @@
   .form-chip.sel-recruit { border-color: #7A3A1A; color: #7A3A1A; background: #F5EEE8; }
   .section-divider { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 16px; margin-top: 8px; }
 
-  /* Toast */
+  .board-tab.active-community { color: #2d7a3a; border-bottom-color: #2d7a3a; font-weight: 500; }
+  .cat-badge-community { background: #eaf5eb; color: #2d7a3a; }
+  .cat-select-btn.sel-community { border-color: #2d7a3a; background: #eaf5eb; }
+  .cat-select-btn.sel-community .cs-label { color: #2d7a3a; }
+  .form-chip.sel-community { border-color: #2d7a3a; color: #2d7a3a; background: #eaf5eb; }
+  .btn-submit-community { background: #2d7a3a; }
   .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--cream); font-size: 13px; padding: 10px 20px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 999; white-space: nowrap; }
   .toast.show { opacity: 1; }
 
@@ -213,7 +218,7 @@
     <div class="nav-links">
       <a href="index.html" >홈</a>
       <a href="rules.html" >규정 검색</a>
-      <a href="board.html" class="active">게시판</a>
+      <a href="board.html" class="active">커뮤니티</a>
       <a href="feed.html" >펜싱 피드</a>
       <a href="sites.html" >사이트 모음</a>
       <a href="clubs.html" >클럽 찾기</a>
@@ -229,8 +234,8 @@
 <div class="page-header">
   <div class="page-header-inner">
     <div>
-      <h1>게시판</h1>
-      <p>오픈 피스트 · 클럽 구인 & 홍보</p>
+      <h1>커뮤니티</h1>
+      <p>오픈 피스트 · 클럽 홍보 · 자유 게시판</p>
     </div>
     <button class="btn-write" onclick="goWrite()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -247,7 +252,8 @@
         <div class="board-tabs">
           <button class="board-tab active-all" id="tab-all" onclick="switchTab('all')">전체</button>
           <button class="board-tab" id="tab-open" onclick="switchTab('open')">🤺 오픈 피스트</button>
-          <button class="board-tab" id="tab-recruit" onclick="switchTab('recruit')">🏛 클럽 구인 & 홍보</button>
+          <button class="board-tab" id="tab-recruit" onclick="switchTab('recruit')">🏛 클럽 홍보</button>
+          <button class="board-tab" id="tab-community" onclick="switchTab('community')">💬 커뮤니티</button>
         </div>
         <div class="board-search">
           <input type="text" id="search-input" placeholder="제목 또는 지역으로 검색" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" onkeydown="if(event.key==='Enter')doSearch()" />
@@ -347,16 +353,21 @@
       <!-- 카테고리 선택 -->
       <div id="cat-select-section">
         <div class="section-divider">카테고리 선택</div>
-        <div class="cat-select-row">
+        <div class="cat-select-row" style="grid-template-columns:1fr 1fr 1fr">
           <button class="cat-select-btn" id="cs-open" onclick="selectWriteCat('open')">
             <div class="cs-icon">🤺</div>
-            <span class="cs-label">오픈 피스트 (Open Bout)</span>
-            <span class="cs-desc">훈련 파트너 · 합동 경기 모집</span>
+            <span class="cs-label">오픈 피스트</span>
+            <span class="cs-desc">훈련 파트너 · 합동 경기</span>
           </button>
           <button class="cat-select-btn" id="cs-recruit" onclick="selectWriteCat('recruit')">
             <div class="cs-icon">🏛</div>
-            <span class="cs-label">클럽 구인 & 홍보</span>
-            <span class="cs-desc">코치 모집 · 클럽 소개 · 파트타임</span>
+            <span class="cs-label">클럽 홍보</span>
+            <span class="cs-desc">코치 모집 · 클럽 소개</span>
+          </button>
+          <button class="cat-select-btn" id="cs-community" onclick="selectWriteCat('community')">
+            <div class="cs-icon">💬</div>
+            <span class="cs-label">커뮤니티</span>
+            <span class="cs-desc">질문 · 정보 · 잡담</span>
           </button>
         </div>
       </div>
@@ -483,6 +494,30 @@
         <div class="form-group">
           <label>지원 방법</label>
           <input type="text" id="input-contact-r" placeholder="예) 이메일 / 오픈카톡 / 댓글 문의">
+        </div>
+      </div>
+
+      <!-- 커뮤니티 폼 -->
+      <div id="form-community" style="display:none">
+        <div class="section-divider">커뮤니티 글쓰기</div>
+        <div class="form-group">
+          <label>제목 <span style="color:var(--red)">*</span></label>
+          <input type="text" id="input-title-c" placeholder="제목을 입력하세요" maxlength="100">
+        </div>
+        <div class="form-group">
+          <label>태그</label>
+          <div class="chip-group">
+            <button type="button" class="form-chip" onclick="toggleChip(this,'community','tag')">질문</button>
+            <button type="button" class="form-chip" onclick="toggleChip(this,'community','tag')">정보</button>
+            <button type="button" class="form-chip" onclick="toggleChip(this,'community','tag')">잡담</button>
+            <button type="button" class="form-chip" onclick="toggleChip(this,'community','tag')">장비</button>
+            <button type="button" class="form-chip" onclick="toggleChip(this,'community','tag')">대회</button>
+            <button type="button" class="form-chip" onclick="toggleChip(this,'community','tag')">훈련</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>내용 <span style="color:var(--red)">*</span></label>
+          <textarea id="input-body-c" placeholder="자유롭게 작성해주세요."></textarea>
         </div>
       </div>
 
@@ -756,8 +791,9 @@ async function loadPosts() {
   const isNew = (d) => (Date.now() - new Date(d)) < 3600 * 24 * 1000;
 
   function catBadge(cat) {
-    if (cat === 'open')    return '<span class="cat-badge cat-badge-open">오픈 피스트</span>';
-    if (cat === 'recruit') return '<span class="cat-badge cat-badge-recruit">클럽 구인</span>';
+    if (cat === 'open')      return '<span class="cat-badge cat-badge-open">오픈 피스트</span>';
+    if (cat === 'recruit')   return '<span class="cat-badge cat-badge-recruit">클럽 홍보</span>';
+    if (cat === 'community') return '<span class="cat-badge cat-badge-community">커뮤니티</span>';
     return '';
   }
 
@@ -880,6 +916,12 @@ async function loadPost(id) {
         ${items.map(([k,v]) => `<div style="display:flex;gap:12px;font-size:13px"><span style="color:var(--muted);min-width:72px">${k}</span><span style="color:var(--ink);font-weight:500">${escHtml(String(v))}</span></div>`).join('')}
       </div>`;
     }
+  } else if (post.category === 'community') {
+    if (post.level) {
+      metaHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+        ${post.level.split(',').map(t => `<span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#eaf5eb;color:#2d7a3a;font-weight:500">${t.trim()}</span>`).join('')}
+      </div>`;
+    }
   }
   const bodyEl = document.getElementById('detail-body');
   bodyEl.innerHTML = metaHtml + (post.content ? `<div style="white-space:pre-wrap;word-break:keep-all">${escHtml(post.content)}</div>` : '');
@@ -970,7 +1012,7 @@ async function toggleLike() {
 function switchTab(tab) {
   currentTab = tab;
   currentPage = 1;
-  ['all','open','recruit'].forEach(t => {
+  ['all','open','recruit','community'].forEach(t => {
     const el = document.getElementById('tab-' + t);
     if (el) el.className = 'board-tab' + (t === tab ? ` active-${t}` : '');
   });
@@ -986,11 +1028,16 @@ function doSearch() {
 /* ─── 글쓰기 카테고리 선택 ─── */
 function selectWriteCat(cat) {
   writeCat = cat;
-  document.getElementById('cs-open').className    = 'cat-select-btn' + (cat === 'open'    ? ' sel-open'    : '');
-  document.getElementById('cs-recruit').className = 'cat-select-btn' + (cat === 'recruit' ? ' sel-recruit' : '');
-  document.getElementById('form-open').style.display    = cat === 'open'    ? '' : 'none';
-  document.getElementById('form-recruit').style.display = cat === 'recruit' ? '' : 'none';
-  document.getElementById('write-submit-btn').style.display = '';
+  ['open','recruit','community'].forEach(c => {
+    const btn = document.getElementById('cs-' + c);
+    if (btn) btn.className = 'cat-select-btn' + (c === cat ? ` sel-${c}` : '');
+  });
+  document.getElementById('form-open').style.display      = cat === 'open'      ? '' : 'none';
+  document.getElementById('form-recruit').style.display   = cat === 'recruit'   ? '' : 'none';
+  document.getElementById('form-community').style.display = cat === 'community' ? '' : 'none';
+  const btn = document.getElementById('write-submit-btn');
+  btn.style.display = '';
+  btn.className = `btn-submit btn-submit-${cat}`;
 }
 
 function toggleChip(el, cat) {
@@ -1011,6 +1058,7 @@ function goWrite() {
   document.getElementById('cat-select-section').style.display = '';
   document.getElementById('form-open').style.display = 'none';
   document.getElementById('form-recruit').style.display = 'none';
+  document.getElementById('form-community').style.display = 'none';
   document.getElementById('write-submit-btn').style.display = 'none';
   document.getElementById('cs-open').className = 'cat-select-btn';
   document.getElementById('cs-recruit').className = 'cat-select-btn';
@@ -1062,7 +1110,14 @@ async function submitPost() {
 
   let title, content, extra = {};
 
-  if (writeCat === 'open') {
+  if (writeCat === 'community') {
+    title   = (document.getElementById('input-title-c').value || '').trim();
+    content = (document.getElementById('input-body-c').value  || '').trim();
+    const tags = Array.from(document.querySelectorAll('#form-community .form-chip.sel-community')).map(c => c.textContent).join(', ');
+    if (!title)   { showToast('제목을 입력해주세요'); return; }
+    if (!content) { showToast('내용을 입력해주세요'); return; }
+    extra = { category: 'community', level: tags };
+  } else if (writeCat === 'open') {
     title   = (document.getElementById('input-title').value || '').trim();
     content = (document.getElementById('input-body').value  || '').trim();
     const weapon    = document.getElementById('input-weapon').value;
