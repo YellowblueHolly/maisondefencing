@@ -83,6 +83,7 @@
 
   .source-badge { position: absolute; top: 8px; left: 8px; font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
   .badge-reddit  { background: rgba(255,69,0,0.85); color: #fff; }
+  .badge-fie     { background: rgba(0,48,135,0.85); color: #fff; }
   .badge-youtube { background: rgba(255,0,0,0.85); color: #fff; }
   .badge-user    { background: rgba(26,107,90,0.9); color: #fff; }
   .badge-instagram { background: linear-gradient(135deg,#833ab4,#fd1d1d); color: #fff; }
@@ -197,6 +198,9 @@
     <button class="chip active" id="chip-all" onclick="setFilter('all')">전체</button>
     <button class="chip" id="chip-reddit" onclick="setFilter('reddit')">
       <span class="chip-dot dot-reddit"></span> Reddit
+    </button>
+    <button class="chip" id="chip-fie" onclick="setFilter('fie')">
+      <span class="chip-dot" style="background:#003087"></span> FIE
     </button>
     <button class="chip" id="chip-youtube" onclick="setFilter('youtube')">
       <span class="chip-dot" style="background:var(--youtube)"></span> YouTube
@@ -385,7 +389,7 @@ function renderNavAuth() {
 function showAuthPrompt() { location.href = 'board.html'; }
 async function logout() { await sb.auth.signOut(); showToast('로그아웃 됐어요'); }
 
-/* ── Reddit 로드 (rss2json 사용) ── */
+/* ── Reddit 로드 ── */
 async function loadReddit() {
   const rssUrl = 'https://www.reddit.com/r/fencing/top/.rss?limit=40&t=week';
   const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
@@ -401,21 +405,55 @@ async function loadReddit() {
       return {
         id: 'reddit-' + encodeURIComponent(item.link),
         source: 'reddit',
-        type: 'image',
+        type: thumb ? 'image' : 'text',
         title: item.title,
-        thumbnail: thumb,
+        thumbnail: thumb && !thumb.includes('external-preview') ? thumb : '',
         url: item.link,
         author: 'r/fencing',
         likes: 0,
         date: item.pubDate || new Date().toISOString(),
       };
-    }).filter(i => i.thumbnail && !i.thumbnail.includes('external-preview'));
+    });
 
     allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
     allItems.push(...items);
     console.log('Reddit: ' + items.length + '개 로드됨');
   } catch(e) {
     console.warn('Reddit 로드 실패:', e.message);
+  }
+}
+
+/* ── FIE 뉴스 로드 ── */
+async function loadFIE() {
+  const rssUrl = 'https://fie.org/news/rss';
+  const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
+  try {
+    const res = await fetch(apiUrl);
+    if (!res.ok) throw new Error('FIE rss2json ' + res.status);
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error('FIE status: ' + data.status);
+
+    const items = (data.items || []).slice(0, 20).map(item => {
+      const imgMatch = item.description?.match(/<img[^>]+src="([^"]+)"/);
+      const thumb = imgMatch ? imgMatch[1] : '';
+      return {
+        id: 'fie-' + encodeURIComponent(item.link),
+        source: 'fie',
+        type: thumb ? 'image' : 'text',
+        title: item.title,
+        thumbnail: thumb || '',
+        url: item.link,
+        author: 'FIE',
+        likes: 0,
+        date: item.pubDate || new Date().toISOString(),
+      };
+    });
+
+    allItems = allItems.filter(i => !i.id.startsWith('fie-'));
+    allItems.push(...items);
+    console.log('FIE: ' + items.length + '개 로드됨');
+  } catch(e) {
+    console.warn('FIE 로드 실패:', e.message);
   }
 }
 
@@ -516,7 +554,7 @@ async function loadUserMemes() {
 async function loadAll() {
   document.getElementById('feed-status').textContent = '피드 로딩 중...';
   document.getElementById('masonry').innerHTML = '';
-  await Promise.allSettled([loadReddit(), loadUserMemes(), loadYouTube()]);
+  await Promise.allSettled([loadReddit(), loadFIE(), loadUserMemes(), loadYouTube()]);
   applyFilterSort();
 }
 
@@ -524,6 +562,7 @@ async function loadAll() {
 function applyFilterSort() {
   let items = [...allItems];
   if (currentFilter === 'reddit')  items = items.filter(i => i.source === 'reddit');
+  else if (currentFilter === 'fie')  items = items.filter(i => i.source === 'fie');
   if (currentFilter === 'youtube') items = items.filter(i => i.source === 'youtube');
   if (currentFilter === 'user')    items = items.filter(i => i.source === 'user');
   if (currentSort === 'top') items.sort((a,b) => (b.likes||0) - (a.likes||0));
@@ -535,7 +574,7 @@ function applyFilterSort() {
 
 function setFilter(f) {
   currentFilter = f;
-  ['all','reddit','youtube','user'].forEach(k => document.getElementById('chip-'+k)?.classList.remove('active'));
+  ['all','reddit','fie','youtube','user'].forEach(k => document.getElementById('chip-'+k)?.classList.remove('active'));
   document.getElementById('chip-'+f).classList.add('active');
   applyFilterSort();
 }
@@ -569,8 +608,8 @@ function renderGrid() {
 
 function renderCard(item) {
   const isOwner = currentUser && item.authorId === currentUser.id;
-  const badgeClass = { reddit:'badge-reddit', user:'badge-user', youtube:'badge-youtube', instagram:'badge-instagram' }[item.source] || 'badge-user';
-  const badgeLabel = { reddit:'Reddit', user:'회원 업로드', youtube:'YouTube', instagram:'Instagram' }[item.source] || '업로드';
+  const badgeClass = { reddit:'badge-reddit', user:'badge-user', youtube:'badge-youtube', instagram:'badge-instagram', fie:'badge-fie' }[item.source] || 'badge-user';
+  const badgeLabel = { reddit:'Reddit', user:'회원 업로드', youtube:'YouTube', instagram:'Instagram', fie:'FIE' }[item.source] || '업로드';
   const isVideo = item.type === 'video' || item.type === 'youtube' || item.type === 'instagram';
 
   let thumbHtml = '';
