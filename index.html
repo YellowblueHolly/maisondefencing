@@ -794,7 +794,8 @@ const SUPABASE_URL = 'https://ldqpimpauuqgxrqteswy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AtP1YZ-SG-VJ8dSYQnOHww_1z3cZxrw';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function getGrade(points) {
+function getGrade(points, role) {
+  if (role === 'admin') return { label: '👑 관리자', cls: 'grade-admin' };
   const p = points || 0;
   if (p >= 1000) return { label: '👑 VIP 펜서',   cls: 'grade-4' };
   if (p >= 500)  return { label: '🏅 네임드 펜서', cls: 'grade-3' };
@@ -1039,7 +1040,7 @@ async function initAuthWidget() {
     if (session?.user) {
       const { data: profile } = await sb.from('profiles').select('username, points, role').eq('id', session.user.id).single();
       const username = profile?.username || session.user.email?.split('@')[0] || '펜서';
-      const grade = getGrade(profile?.points);
+      const grade = getGrade(profile?.points, profile?.role);
 
       // nav 버튼 교체 — 심플하게
       const navRight = document.querySelector('.nav-right');
@@ -1056,7 +1057,10 @@ async function initAuthWidget() {
       document.getElementById('widget-user').style.display = '';
       document.getElementById('widget-username').textContent = username + ' 님';
       const gradeEl = document.getElementById('widget-grade');
-      if (gradeEl) gradeEl.innerHTML = `<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#e8f5e9;color:#2e7d32;font-weight:500;margin-right:6px">${grade.label}</span><span style="font-size:11px;color:var(--muted)">${profile?.points || 0}P</span>`;
+      if (gradeEl) {
+        const pointsHtml = profile?.role !== 'admin' ? `<span style="font-size:11px;color:var(--muted);margin-left:4px">${profile?.points || 0}P</span>` : '';
+        gradeEl.innerHTML = `<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${grade.cls === 'grade-admin' ? '#1C1A17' : '#e8f5e9'};color:${grade.cls === 'grade-admin' ? '#F5F2EC' : '#2e7d32'};font-weight:500">${grade.label}</span>${pointsHtml}`;
+      }
     }
   } catch(e) { console.warn('initAuthWidget error:', e); }
 }
