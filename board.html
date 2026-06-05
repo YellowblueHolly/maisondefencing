@@ -41,6 +41,13 @@
   .btn-sm.primary:hover { opacity: .85; }
   .user-chip { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
   .user-chip strong { color: var(--ink); font-weight: 500; }
+  .grade-badge { font-size: 11px; padding: 1px 7px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+  .grade-0 { background: #e8f5e9; color: #2e7d32; }
+  .grade-1 { background: #f5f5f5; color: #616161; }
+  .grade-2 { background: #fff3e0; color: #e65100; }
+  .grade-3 { background: #fce4ec; color: #c62828; }
+  .grade-4 { background: #fff8e1; color: #f57f17; }
+  .points-text { font-size: 11px; color: var(--muted); }
 
   /* Page header */
   .page-header { background: var(--ink); padding: 32px 32px 28px; }
@@ -576,6 +583,15 @@ const SUPABASE_URL = 'https://ldqpimpauuqgxrqteswy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AtP1YZ-SG-VJ8dSYQnOHww_1z3cZxrw';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+function getGrade(points) {
+  const p = points || 0;
+  if (p >= 1000) return { label: '👑 VIP 펜서',   cls: 'grade-4' };
+  if (p >= 500)  return { label: '🏅 네임드 펜서', cls: 'grade-3' };
+  if (p >= 200)  return { label: '⚔️ 펜서',        cls: 'grade-2' };
+  if (p >= 50)   return { label: '⚪ 입문 펜서',   cls: 'grade-1' };
+  return         { label: '🌱 새싹 펜서',          cls: 'grade-0' };
+}
+
 /* ─── 상태 ─── */
 let currentUser = null;
 let currentProfile = null;
@@ -627,7 +643,7 @@ async function initAuth() {
 
 async function setUser(user) {
   currentUser = user;
-  const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  const { data } = await sb.from('profiles').select('*, points, role').eq('id', user.id).single();
   currentProfile = data;
   renderNavAuth();
 }
@@ -642,7 +658,13 @@ function renderNavAuth() {
   const el = document.getElementById('nav-auth');
   if (currentProfile) {
     el.innerHTML = `
-      <span class="user-chip"><strong>${escHtml(currentProfile.username)}</strong> 님</span>
+      const grade = getGrade(currentProfile.points);
+      navAuth.innerHTML = `
+      <span class="user-chip">
+        <span class="grade-badge ${grade.cls}">${grade.label}</span>
+        <strong>${escHtml(currentProfile.username)}</strong> 님
+        <span class="points-text">${currentProfile.points || 0}P</span>
+      </span>
       <button class="btn-sm" onclick="logout()">로그아웃</button>`;
   } else {
     el.innerHTML = `
@@ -772,7 +794,7 @@ async function loadPosts() {
 
   let query = sb
     .from('posts')
-    .select(`*, profiles!posts_author_id_fkey(username), comments(count)`, { count: 'exact' })
+    .select(`*, profiles!posts_author_id_fkey(username, points, role), comments(count)`, { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to);
 
@@ -817,7 +839,10 @@ async function loadPosts() {
         ${isNew(p.created_at) ? '<span class="new-badge">NEW</span>' : ''}
         ${ddayBadge(p)}
       </div>
-      <div class="post-author">${escHtml(p.profiles?.username || '알수없음')}</div>
+      <div class="post-author">
+        ${(() => { const g = getGrade(p.profiles?.points); return `<span class="grade-badge ${g.cls}" style="margin-right:4px">${g.label}</span>`; })()}
+        ${escHtml(p.profiles?.username || '알수없음')}
+      </div>
       <div class="post-stat">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         ${p.views || 0}
@@ -879,7 +904,7 @@ async function loadPost(id) {
   await sb.rpc('increment_views', { post_id: id });
 
   const { data: post } = await sb.from('posts')
-    .select('*, profiles!posts_author_id_fkey(username)')
+    .select('*, profiles!posts_author_id_fkey(username, points, role)')
     .eq('id', id)
     .single();
 
@@ -887,7 +912,9 @@ async function loadPost(id) {
   currentPost = post;
 
   document.getElementById('detail-title').textContent  = post.title;
-  document.getElementById('detail-author').textContent = post.profiles?.username || '알수없음';
+  const grade = getGrade(post.profiles?.points);
+  document.getElementById('detail-author').innerHTML =
+    `<span class="grade-badge ${grade.cls}" style="margin-right:4px">${grade.label}</span>${escHtml(post.profiles?.username || '알수없음')}`;
   document.getElementById('detail-date').textContent   = timeAgo(post.created_at);
   document.getElementById('detail-views').textContent  = `조회 ${post.views || 0}`;
 
@@ -954,7 +981,7 @@ async function loadPost(id) {
 
 async function loadComments(postId) {
   const { data } = await sb.from('comments')
-    .select('*, profiles!posts_author_id_fkey(username)')
+    .select('*, profiles!posts_author_id_fkey(username, points, role)')
     .eq('post_id', postId)
     .order('created_at', { ascending: true });
 
@@ -962,7 +989,10 @@ async function loadComments(postId) {
   document.getElementById('comment-list').innerHTML = (data||[]).map(c => `
     <div class="comment-item" id="c-${c.id}">
       <div class="comment-header">
-        <span class="comment-author">${escHtml(c.profiles?.username || '알수없음')}</span>
+        <span class="comment-author">
+          ${(() => { const g = getGrade(c.profiles?.points); return `<span class="grade-badge ${g.cls}" style="margin-right:4px">${g.label}</span>`; })()}
+          ${escHtml(c.profiles?.username || '알수없음')}
+        </span>
         <span style="display:flex;align-items:center;gap:6px">
           <span class="comment-date">${timeAgo(c.created_at)}</span>
           ${currentUser?.id === c.author_id ? `<button class="comment-del" onclick="deleteComment(${c.id})">삭제</button>` : ''}
