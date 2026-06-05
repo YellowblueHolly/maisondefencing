@@ -27,11 +27,11 @@
 
   /* Nav */
   .nav { background: var(--paper); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 200; }
-  .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; height: 56px; display: flex; align-items: center; }
-  .nav-logo { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: 2px; margin-right: 36px; white-space: nowrap; }
+  .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 4px; }
+  .nav-logo { font-family: var(--font-display); font-size: 16px; font-weight: 600; letter-spacing: 1px; margin-right: 16px; white-space: nowrap; flex-shrink: 0; }
   .nav-logo em { color: var(--red); font-style: normal; }
-  .nav-links { display: flex; gap: 2px; flex: 1; }
-  .nav-links a { font-size: 13px; color: var(--muted); padding: 5px 11px; border-radius: 6px; transition: all .15s; }
+  .nav-links { display: flex; gap: 0; flex: 1; flex-wrap: nowrap; overflow: hidden; }
+  .nav-links a { font-size: 12px; color: var(--muted); padding: 5px 8px; border-radius: 6px; transition: all .15s; white-space: nowrap; }
   .nav-links a:hover { background: var(--cream); color: var(--ink); }
   .nav-links a.active { background: var(--cream); color: var(--ink); font-weight: 500; }
   .nav-auth { display: flex; align-items: center; gap: 8px; margin-left: auto; }
@@ -47,7 +47,9 @@
   .grade-2 { background: #fff3e0; color: #e65100; }
   .grade-3 { background: #fce4ec; color: #c62828; }
   .grade-4 { background: #fff8e1; color: #f57f17; }
+  .grade-admin { background: #1C1A17; color: #F5F2EC; }
   .points-text { font-size: 11px; color: var(--muted); }
+  .nav-auth-wrap { display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; flex-shrink: 0; }
 
   /* Page header */
   .page-header { background: var(--ink); padding: 32px 32px 28px; }
@@ -583,7 +585,8 @@ const SUPABASE_URL = 'https://ldqpimpauuqgxrqteswy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AtP1YZ-SG-VJ8dSYQnOHww_1z3cZxrw';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function getGrade(points) {
+function getGrade(points, role) {
+  if (role === 'admin') return { label: '👑 관리자', cls: 'grade-admin' };
   const p = points || 0;
   if (p >= 1000) return { label: '👑 VIP 펜서',   cls: 'grade-4' };
   if (p >= 500)  return { label: '🏅 네임드 펜서', cls: 'grade-3' };
@@ -657,15 +660,17 @@ function clearUser() {
 function renderNavAuth() {
   const el = document.getElementById('nav-auth');
   if (currentProfile) {
-    const grade = getGrade(currentProfile.points);
+    const grade = getGrade(currentProfile.points, currentProfile.role);
+    el.className = 'nav-auth-wrap';
     el.innerHTML = `
       <span class="user-chip">
         <span class="grade-badge ${grade.cls}">${grade.label}</span>
         <strong>${escHtml(currentProfile.username)}</strong> 님
-        <span class="points-text">${currentProfile.points || 0}P</span>
+        ${currentProfile.role !== 'admin' ? `<span class="points-text">${currentProfile.points || 0}P</span>` : ''}
       </span>
       <button class="btn-sm" onclick="logout()">로그아웃</button>`;
   } else {
+    el.className = 'nav-auth';
     el.innerHTML = `
       <button class="btn-sm" onclick="showAuth('login')">로그인</button>
       <button class="btn-sm primary" onclick="showAuth('signup')">회원가입</button>`;
@@ -839,7 +844,7 @@ async function loadPosts() {
         ${ddayBadge(p)}
       </div>
       <div class="post-author">
-        ${(() => { const g = getGrade(p.profiles?.points); return `<span class="grade-badge ${g.cls}" style="margin-right:4px">${g.label}</span>`; })()}
+        ${(() => { const g = getGrade(p.profiles?.points, p.profiles?.role); return `<span class="grade-badge ${g.cls}" style="margin-right:4px">${g.label}</span>`; })()}
         ${escHtml(p.profiles?.username || '알수없음')}
       </div>
       <div class="post-stat">
@@ -911,7 +916,7 @@ async function loadPost(id) {
   currentPost = post;
 
   document.getElementById('detail-title').textContent  = post.title;
-  const grade = getGrade(post.profiles?.points);
+  const grade = getGrade(post.profiles?.points, post.profiles?.role);
   document.getElementById('detail-author').innerHTML =
     `<span class="grade-badge ${grade.cls}" style="margin-right:4px">${grade.label}</span>${escHtml(post.profiles?.username || '알수없음')}`;
   document.getElementById('detail-date').textContent   = timeAgo(post.created_at);
@@ -959,7 +964,9 @@ async function loadPost(id) {
 
   // 내 글이면 수정/삭제 버튼
   const ownerEl = document.getElementById('owner-actions');
-  ownerEl.style.display = (currentUser && currentUser.id === post.author_id) ? 'flex' : 'none';
+  const isOwner = currentUser && currentUser.id === post.author_id;
+  const isAdmin = currentProfile?.role === 'admin';
+  ownerEl.style.display = (isOwner || isAdmin) ? 'flex' : 'none';
 
   // 좋아요 여부
   if (currentUser) {
@@ -989,7 +996,7 @@ async function loadComments(postId) {
     <div class="comment-item" id="c-${c.id}">
       <div class="comment-header">
         <span class="comment-author">
-          ${(() => { const g = getGrade(c.profiles?.points); return `<span class="grade-badge ${g.cls}" style="margin-right:4px">${g.label}</span>`; })()}
+          ${(() => { const g = getGrade(c.profiles?.points, c.profiles?.role); return `<span class="grade-badge ${g.cls}" style="margin-right:4px">${g.label}</span>`; })()}
           ${escHtml(c.profiles?.username || '알수없음')}
         </span>
         <span style="display:flex;align-items:center;gap:6px">
