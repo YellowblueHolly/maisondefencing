@@ -1279,7 +1279,12 @@ async function submitPost() {
 
 async function deletePost() {
   if (!confirm('정말 삭제할까요?')) return;
-  await sb.from('posts').delete().eq('id', currentPost.id);
+  const { error } = await sb.from('posts').delete().eq('id', currentPost.id);
+  if (error) {
+    console.error('삭제 오류:', error);
+    showToast('삭제 실패: ' + error.message);
+    return;
+  }
   showToast('삭제됐어요');
   goList();
 }
