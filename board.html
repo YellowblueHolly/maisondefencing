@@ -48,6 +48,10 @@
   .grade-3 { background: #fce4ec; color: #c62828; }
   .grade-4 { background: #fff8e1; color: #f57f17; }
   .grade-admin { background: #1C1A17; color: #F5F2EC; }
+  .cat-badge-notice { background: #fff3cd; color: #856404; font-weight: 600; }
+  .board-tab.active-notice { color: #856404; border-bottom-color: #856404; font-weight: 500; }
+  .author-admin { color: var(--red) !important; font-weight: 700 !important; }
+  .author-vip { font-weight: 700; }
   .points-text { font-size: 11px; color: var(--muted); }
   .nav-auth-wrap { display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; flex-shrink: 0; }
 
@@ -64,8 +68,8 @@
 
   /* Post list */
   .post-table { background: var(--paper); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .post-table-header { display: grid; grid-template-columns: 1fr 80px 60px 60px; gap: 12px; padding: 10px 20px; background: var(--faint); border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-  .post-row { display: grid; grid-template-columns: 1fr 80px 60px 60px; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; align-items: center; }
+  .post-table-header { display: grid; grid-template-columns: 1fr 100px 60px; gap: 12px; padding: 10px 20px; background: var(--faint); border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .post-row { display: grid; grid-template-columns: 1fr 100px 60px; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; align-items: center; }
   .post-row:last-child { border-bottom: none; }
   .post-row:hover { background: var(--cream); }
   .post-row:hover .post-title { color: var(--red); }
@@ -264,6 +268,7 @@
       <div class="post-table">
         <div class="board-tabs">
           <button class="board-tab active-all" id="tab-all" onclick="switchTab('all')">전체</button>
+          <button class="board-tab" id="tab-notice" onclick="switchTab('notice')" style="display:none">📢 공지</button>
           <button class="board-tab" id="tab-open" onclick="switchTab('open')">🤺 오픈 피스트</button>
           <button class="board-tab" id="tab-recruit" onclick="switchTab('recruit')">🏛 클럽 홍보</button>
           <button class="board-tab" id="tab-community" onclick="switchTab('community')">💬 커뮤니티</button>
@@ -276,7 +281,6 @@
           <span>제목</span>
           <span>작성자</span>
           <span style="text-align:center">조회</span>
-          <span style="text-align:center">댓글</span>
         </div>
         <div id="post-list-body"><div class="loading">게시글 로딩 중...</div></div>
       </div>
@@ -366,7 +370,7 @@
       <!-- 카테고리 선택 -->
       <div id="cat-select-section">
         <div class="section-divider">카테고리 선택</div>
-        <div class="cat-select-row" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="cat-select-row" style="grid-template-columns:1fr 1fr 1fr" id="cat-select-grid">
           <button class="cat-select-btn" id="cs-open" onclick="selectWriteCat('open')">
             <div class="cs-icon">🤺</div>
             <span class="cs-label">오픈 피스트</span>
@@ -381,6 +385,11 @@
             <div class="cs-icon">💬</div>
             <span class="cs-label">커뮤니티</span>
             <span class="cs-desc">질문 · 정보 · 잡담</span>
+          </button>
+          <button class="cat-select-btn" id="cs-notice" onclick="selectWriteCat('notice')" style="display:none">
+            <div class="cs-icon">📢</div>
+            <span class="cs-label">공지사항</span>
+            <span class="cs-desc">관리자 공지</span>
           </button>
         </div>
       </div>
@@ -534,6 +543,19 @@
         </div>
       </div>
 
+      <!-- 공지사항 폼 (관리자 전용) -->
+      <div id="form-notice" style="display:none">
+        <div class="section-divider">공지사항 작성</div>
+        <div class="form-group">
+          <label>제목 <span style="color:var(--red)">*</span></label>
+          <input type="text" id="input-title-n" placeholder="공지 제목을 입력하세요" maxlength="100">
+        </div>
+        <div class="form-group">
+          <label>내용 <span style="color:var(--red)">*</span></label>
+          <textarea id="input-body-n" placeholder="공지 내용을 작성해주세요."></textarea>
+        </div>
+      </div>
+
       <div class="write-actions">
         <button class="cancel-btn" onclick="goList()">취소</button>
         <button class="submit-btn" id="write-submit-btn" onclick="submitPost()" style="display:none">등록</button>
@@ -648,6 +670,9 @@ async function setUser(user) {
   currentUser = user;
   const { data } = await sb.from('profiles').select('*, points, role').eq('id', user.id).single();
   currentProfile = data;
+  // 관리자면 공지 탭 노출
+  const noticeTab = document.getElementById('tab-notice');
+  if (noticeTab) noticeTab.style.display = data?.role === 'admin' ? '' : 'none';
   renderNavAuth();
 }
 
@@ -829,6 +854,7 @@ async function loadPosts() {
   const isNew = (d) => (Date.now() - new Date(d)) < 3600 * 24 * 1000;
 
   function catBadge(cat) {
+    if (cat === 'notice')    return '<span class="cat-badge cat-badge-notice">📢 공지</span>';
     if (cat === 'open')      return '<span class="cat-badge cat-badge-open">오픈 피스트</span>';
     if (cat === 'recruit')   return '<span class="cat-badge cat-badge-recruit">클럽 홍보</span>';
     if (cat === 'community') return '<span class="cat-badge cat-badge-community">커뮤니티</span>';
@@ -855,15 +881,18 @@ async function loadPosts() {
         ${ddayBadge(p)}
       </div>
       <div class="post-author">
-        ${p.profiles?.role === 'admin' ? '👑 ' : ''}${escHtml(p.profiles?.username || '알수없음')}
+        ${(() => {
+          const grade = getGrade(p.profiles?.points, p.profiles?.role);
+          const icon = grade.label.split(' ')[0];
+          const isAdmin = p.profiles?.role === 'admin';
+          const isVip = p.profiles?.points >= 1000 && !isAdmin;
+          const cls = isAdmin ? 'author-admin' : isVip ? 'author-vip' : '';
+          return `<span style="margin-right:3px">${icon}</span><span class="${cls}">${escHtml(p.profiles?.username || '알수없음')}</span>`;
+        })()}
       </div>
       <div class="post-stat">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         ${p.views || 0}
-      </div>
-      <div class="post-stat">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        ${commentCount}
       </div>
     </div>`;
   }).join('');
@@ -998,7 +1027,7 @@ async function loadPost(id) {
 
 async function loadComments(postId) {
   const { data } = await sb.from('comments')
-    .select('*, profiles!posts_author_id_fkey(username, points, role)')
+    .select('*, profiles!comments_author_id_fkey(username, points, role)')
     .eq('post_id', postId)
     .order('created_at', { ascending: true });
 
@@ -1063,7 +1092,7 @@ async function toggleLike() {
 function switchTab(tab) {
   currentTab = tab;
   currentPage = 1;
-  ['all','open','recruit','community'].forEach(t => {
+  ['all','notice','open','recruit','community'].forEach(t => {
     const el = document.getElementById('tab-' + t);
     if (el) el.className = 'board-tab' + (t === tab ? ` active-${t}` : '');
   });
@@ -1079,16 +1108,17 @@ function doSearch() {
 /* ─── 글쓰기 카테고리 선택 ─── */
 function selectWriteCat(cat) {
   writeCat = cat;
-  ['open','recruit','community'].forEach(c => {
+  ['open','recruit','community','notice'].forEach(c => {
     const btn = document.getElementById('cs-' + c);
-    if (btn) btn.className = 'cat-select-btn' + (c === cat ? ` sel-${c}` : '');
+    if (btn) btn.className = 'cat-select-btn' + (c === cat ? ` sel-${c === 'notice' ? 'recruit' : c}` : '');
   });
   document.getElementById('form-open').style.display      = cat === 'open'      ? '' : 'none';
   document.getElementById('form-recruit').style.display   = cat === 'recruit'   ? '' : 'none';
   document.getElementById('form-community').style.display = cat === 'community' ? '' : 'none';
+  document.getElementById('form-notice').style.display    = cat === 'notice'    ? '' : 'none';
   const btn = document.getElementById('write-submit-btn');
   btn.style.display = '';
-  btn.className = `btn-submit btn-submit-${cat}`;
+  btn.className = `btn-submit btn-submit-${cat === 'notice' ? 'recruit' : cat}`;
 }
 
 function toggleChip(el, cat) {
@@ -1110,6 +1140,10 @@ function goWrite() {
   document.getElementById('form-open').style.display = 'none';
   document.getElementById('form-recruit').style.display = 'none';
   document.getElementById('form-community').style.display = 'none';
+  document.getElementById('form-notice').style.display = 'none';
+  // 관리자면 공지 버튼 노출
+  const noticeBtn = document.getElementById('cs-notice');
+  if (noticeBtn) noticeBtn.style.display = currentProfile?.role === 'admin' ? '' : 'none';
   document.getElementById('write-submit-btn').style.display = 'none';
   document.getElementById('cs-open').className = 'cat-select-btn';
   document.getElementById('cs-recruit').className = 'cat-select-btn';
@@ -1162,7 +1196,14 @@ async function submitPost() {
 
   let title, content, extra = {};
 
-  if (writeCat === 'community') {
+  if (writeCat === 'notice') {
+    if (currentProfile?.role !== 'admin') { showToast('관리자만 공지를 작성할 수 있어요'); return; }
+    title   = (document.getElementById('input-title-n').value || '').trim();
+    content = (document.getElementById('input-body-n').value  || '').trim();
+    if (!title)   { showToast('제목을 입력해주세요'); return; }
+    if (!content) { showToast('내용을 입력해주세요'); return; }
+    extra = { category: 'notice' };
+  } else if (writeCat === 'community') {
     title   = (document.getElementById('input-title-c').value || '').trim();
     content = (document.getElementById('input-body-c').value  || '').trim();
     const tags = Array.from(document.querySelectorAll('#form-community .form-chip.sel-community')).map(c => c.textContent).join(', ');
