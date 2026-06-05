@@ -430,6 +430,24 @@
   }
   .btn-map:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); }
 
+  /* ── Auth modal ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(28,26,23,0.5); z-index: 500; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #FDFBF7; border-radius: 14px; padding: 32px; width: 380px; position: relative; }
+  .modal h2 { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 500; letter-spacing: 1px; margin-bottom: 6px; }
+  .modal p { font-size: 13px; color: #6B6760; margin-bottom: 24px; }
+  .modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; font-size: 20px; color: #6B6760; line-height: 1; cursor: pointer; }
+  .modal .mform-group { margin-bottom: 14px; }
+  .modal .mform-group label { display: block; font-size: 12px; color: #6B6760; margin-bottom: 5px; }
+  .modal .mform-group input { width: 100%; padding: 10px 12px; border: 1px solid rgba(28,26,23,0.2); border-radius: 8px; font-size: 14px; background: #F5F2EC; color: #1C1A17; outline: none; font-family: 'Noto Sans KR', sans-serif; }
+  .modal-submit { width: 100%; padding: 11px; background: #1C1A17; color: #F5F2EC; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; margin-top: 8px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+  .modal-switch { text-align: center; margin-top: 14px; font-size: 12px; color: #6B6760; }
+  .modal-switch a { color: #1C1A17; font-weight: 500; cursor: pointer; text-decoration: underline; }
+  .merror-msg { font-size: 12px; color: #C0392B; margin-top: 8px; display: none; }
+  .merror-msg.show { display: block; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1C1A17; color: #F5F2EC; padding: 10px 20px; border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 999; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
   /* ── Quick links widget ── */
   .quicklinks {
     display: grid;
@@ -522,8 +540,8 @@
       <a href="sizing.html">사이즈 조견표</a>
     </div>
     <div class="nav-right">
-      <button class="btn-ghost">로그인</button>
-      <button class="btn-primary">회원가입</button>
+      <button class="btn-ghost" onclick="showAuth('login')">로그인</button>
+      <button class="btn-primary" onclick="showAuth('signup')">회원가입</button>
     </div>
   </div>
 </nav>
@@ -707,8 +725,8 @@
         </div>
         <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px">로그인하면 오픈 피스트 모집, 클럽 홍보, 자유 게시판을 이용할 수 있어요.</p>
         <div style="display:flex;gap:8px">
-          <button onclick="location.href='board.html'" style="flex:1;padding:8px;background:var(--ink);color:var(--cream);border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer">로그인</button>
-          <button onclick="location.href='board.html'" style="flex:1;padding:8px;background:transparent;color:var(--ink);border:1px solid var(--border-strong);border-radius:6px;font-size:12px;cursor:pointer">회원가입</button>
+          <button onclick="showAuth('login')" style="flex:1;padding:8px;background:var(--ink);color:var(--cream);border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer">로그인</button>
+          <button onclick="showAuth('signup')" style="flex:1;padding:8px;background:transparent;color:var(--ink);border:1px solid var(--border-strong);border-radius:6px;font-size:12px;cursor:pointer">회원가입</button>
         </div>
       </div>
       <!-- 로그인 상태 -->
@@ -788,6 +806,33 @@
   <br><span style="color:rgba(245,242,236,0.25);font-size:11px;margin-top:6px;display:block">made by <strong style="color:rgba(245,242,236,0.5)">@Fencer.rabbit</strong></span>
 </footer>
 
+<!-- Auth Modal -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAuth()">×</button>
+    <h2 id="modal-title">로그인</h2>
+    <p id="modal-desc">펜싱 커뮤니티에 오신 걸 환영해요</p>
+    <div class="mform-group" id="username-group" style="display:none">
+      <label>닉네임</label>
+      <input type="text" id="input-username" placeholder="사용할 닉네임" maxlength="20">
+    </div>
+    <div class="mform-group">
+      <label>이메일</label>
+      <input type="email" id="input-email" placeholder="이메일 주소">
+    </div>
+    <div class="mform-group">
+      <label>비밀번호</label>
+      <input type="password" id="input-password" placeholder="비밀번호 (6자 이상)">
+    </div>
+    <div class="merror-msg" id="auth-error"></div>
+    <button class="modal-submit" id="modal-submit-btn" onclick="submitAuth()">로그인</button>
+    <div class="modal-switch" id="modal-switch">
+      계정이 없으신가요? <a onclick="toggleAuthMode()">회원가입</a>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://ldqpimpauuqgxrqteswy.supabase.co';
@@ -802,6 +847,73 @@ function getGrade(points, role) {
   if (p >= 200)  return { label: '⚔️ 펜서',        cls: 'grade-2' };
   if (p >= 50)   return { label: '⚪ 입문 펜서',   cls: 'grade-1' };
   return         { label: '🌱 새싹 펜서',          cls: 'grade-0' };
+}
+
+let isLoginMode = true;
+
+function showAuth(mode) {
+  isLoginMode = mode === 'login';
+  updateAuthModal();
+  document.getElementById('auth-modal').classList.add('show');
+  setTimeout(() => document.getElementById('input-email').focus(), 100);
+}
+function closeAuth() {
+  document.getElementById('auth-modal').classList.remove('show');
+}
+function toggleAuthMode() {
+  isLoginMode = !isLoginMode;
+  updateAuthModal();
+}
+function updateAuthModal() {
+  document.getElementById('modal-title').textContent      = isLoginMode ? '로그인' : '회원가입';
+  document.getElementById('modal-desc').textContent       = isLoginMode ? '펜싱 커뮤니티에 오신 걸 환영해요' : '새 계정을 만들어보세요';
+  document.getElementById('modal-submit-btn').textContent = isLoginMode ? '로그인' : '가입하기';
+  document.getElementById('username-group').style.display = isLoginMode ? 'none' : '';
+  document.getElementById('modal-switch').innerHTML = isLoginMode
+    ? '계정이 없으신가요? <a onclick="toggleAuthMode()">회원가입</a>'
+    : '이미 계정이 있으신가요? <a onclick="toggleAuthMode()">로그인</a>';
+  document.getElementById('auth-error').classList.remove('show');
+}
+function showErr(msg) {
+  const e = document.getElementById('auth-error');
+  e.textContent = msg; e.classList.add('show');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+async function submitAuth() {
+  const email    = document.getElementById('input-email').value.trim();
+  const password = document.getElementById('input-password').value;
+  const username = document.getElementById('input-username').value.trim();
+  const btn      = document.getElementById('modal-submit-btn');
+  if (!email || !password) { showErr('이메일과 비밀번호를 입력해주세요'); return; }
+  btn.disabled = true;
+  btn.textContent = isLoginMode ? '로그인 중...' : '가입 처리 중...';
+  document.getElementById('auth-error').classList.remove('show');
+  if (isLoginMode) {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { showErr('이메일 또는 비밀번호가 올바르지 않아요'); btn.disabled = false; btn.textContent = '로그인'; return; }
+    closeAuth(); showToast('✅ 로그인 됐어요!'); location.reload();
+  } else {
+    if (!username) { showErr('닉네임을 입력해주세요'); btn.disabled = false; btn.textContent = '가입하기'; return; }
+    if (username.length < 2) { showErr('닉네임은 2자 이상이어야 해요'); btn.disabled = false; btn.textContent = '가입하기'; return; }
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { username } } });
+    const isRateLimit = error?.message === 'email rate limit exceeded';
+    if (error && !isRateLimit) {
+      const msg = { 'User already registered': '이미 가입된 이메일이에요', 'Password should be at least 6 characters': '비밀번호는 6자 이상' }[error.message] || '가입 중 오류가 발생했어요';
+      showErr(msg); btn.disabled = false; btn.textContent = '가입하기'; return;
+    }
+    const isAutoLogin = data?.session != null;
+    document.querySelector('#auth-modal .modal').innerHTML = `
+      <div style="padding:40px 32px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">${isAutoLogin ? '🎉' : '📧'}</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;margin-bottom:10px">${isAutoLogin ? '가입 완료!' : '가입 신청 완료!'}</h2>
+        <p style="font-size:14px;color:#6B6760;line-height:1.8;margin-bottom:24px">${isAutoLogin ? `<strong style="color:#1C1A17">${escHtml(username)}</strong> 님, 환영해요 🤺` : `<strong style="color:#1C1A17">${escHtml(email)}</strong>로 인증 메일을 보냈어요.`}</p>
+        <button onclick="closeAuth();location.reload()" style="padding:10px 24px;background:#1C1A17;color:#F5F2EC;border:none;border-radius:8px;font-size:13px;cursor:pointer">확인</button>
+      </div>`;
+  }
 }
 
 function escHtml(s) {
