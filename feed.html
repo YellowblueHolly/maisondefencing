@@ -83,7 +83,6 @@
 
   .source-badge { position: absolute; top: 8px; left: 8px; font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
   .badge-reddit  { background: rgba(255,69,0,0.85); color: #fff; }
-  .badge-fie     { background: rgba(0,48,135,0.85); color: #fff; }
   .badge-youtube { background: rgba(255,0,0,0.85); color: #fff; }
   .badge-user    { background: rgba(26,107,90,0.9); color: #fff; }
   .badge-instagram { background: linear-gradient(135deg,#833ab4,#fd1d1d); color: #fff; }
@@ -386,7 +385,7 @@ function renderNavAuth() {
 function showAuthPrompt() { location.href = 'board.html'; }
 async function logout() { await sb.auth.signOut(); showToast('로그아웃 됐어요'); }
 
-/* ── Reddit 로드 ── */
+/* ── Reddit 로드 (rss2json 사용) ── */
 async function loadReddit() {
   const rssUrl = 'https://www.reddit.com/r/fencing/top/.rss?limit=40&t=week';
   const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
@@ -402,15 +401,15 @@ async function loadReddit() {
       return {
         id: 'reddit-' + encodeURIComponent(item.link),
         source: 'reddit',
-        type: thumb ? 'image' : 'text',
+        type: 'image',
         title: item.title,
-        thumbnail: thumb && !thumb.includes('external-preview') ? thumb : '',
+        thumbnail: thumb,
         url: item.link,
         author: 'r/fencing',
         likes: 0,
         date: item.pubDate || new Date().toISOString(),
       };
-    });
+    }).filter(i => i.thumbnail && !i.thumbnail.includes('external-preview'));
 
     allItems = allItems.filter(i => !i.id.startsWith('reddit-'));
     allItems.push(...items);
@@ -418,48 +417,6 @@ async function loadReddit() {
   } catch(e) {
     console.warn('Reddit 로드 실패:', e.message);
   }
-}
-
-/* ── FIE/USA Fencing 뉴스 로드 ── */
-async function loadFIE() {
-  const feeds = [
-    { url: 'https://www.usafencing.org/news.rss', label: 'USA Fencing' },
-    { url: 'https://fie.org/media/news.rss', label: 'FIE' },
-  ];
-
-  for (const feed of feeds) {
-    try {
-      const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feed.url);
-      const res = await fetch(apiUrl);
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (data.status !== 'ok' || !data.items?.length) continue;
-
-      const items = data.items.slice(0, 15).map(item => {
-        const imgMatch = item.description?.match(/<img[^>]+src="([^"]+)"/);
-        const thumb = imgMatch ? imgMatch[1] : '';
-        return {
-          id: 'fie-' + encodeURIComponent(item.link),
-          source: 'fie',
-          type: thumb ? 'image' : 'text',
-          title: item.title,
-          thumbnail: thumb || '',
-          url: item.link,
-          author: feed.label,
-          likes: 0,
-          date: item.pubDate || new Date().toISOString(),
-        };
-      });
-
-      allItems = allItems.filter(i => !i.id.startsWith('fie-'));
-      allItems.push(...items);
-      console.log(feed.label + ': ' + items.length + '개 로드됨');
-      return;
-    } catch(e) {
-      continue;
-    }
-  }
-  console.warn('FIE/USA Fencing 로드 실패');
 }
 
 /* ── YouTube 로드 ── */
@@ -475,6 +432,7 @@ const YT_HANDLES = [
   { handle: 'Fencingwiki',           name: 'Fencingwiki' },
   { handle: '펜싱윤코치',              name: '펜싱윤코치' },
   { handle: 'FENCINGSEASON',         name: 'FENCINGSEASON' },
+  { handle: 'fencerrabbit',          name: '펜서래빗' },
 ];
 const YT_ID_CACHE_KEY = 'mdf_yt_ids_v3';
 
@@ -612,8 +570,8 @@ function renderGrid() {
 
 function renderCard(item) {
   const isOwner = currentUser && item.authorId === currentUser.id;
-  const badgeClass = { reddit:'badge-reddit', user:'badge-user', youtube:'badge-youtube', instagram:'badge-instagram', fie:'badge-fie' }[item.source] || 'badge-user';
-  const badgeLabel = { reddit:'Reddit', user:'회원 업로드', youtube:'YouTube', instagram:'Instagram', fie:'FIE' }[item.source] || '업로드';
+  const badgeClass = { reddit:'badge-reddit', user:'badge-user', youtube:'badge-youtube', instagram:'badge-instagram' }[item.source] || 'badge-user';
+  const badgeLabel = { reddit:'Reddit', user:'회원 업로드', youtube:'YouTube', instagram:'Instagram' }[item.source] || '업로드';
   const isVideo = item.type === 'video' || item.type === 'youtube' || item.type === 'instagram';
 
   let thumbHtml = '';
