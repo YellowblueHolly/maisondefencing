@@ -959,19 +959,37 @@ async function loadMemes() {
   // 2) Reddit RSS (유저 업로드가 6개 미만일 때 채움)
   if (allPosts.length < 6) {
     try {
-      const rssUrl = 'https://www.reddit.com/r/fencing/top/.rss?limit=30&t=week';
+      const rssUrl = 'https://www.reddit.com/r/fencing/top/.rss?limit=50&t=month';
       const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
       const res = await fetch(apiUrl);
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'ok') {
+          const decode = s => s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
           const redditPosts = (data.items || []).map(item => {
-            const match = item.description?.match(/<img[^>]+src="([^"]+)"/);
-            const thumb = match ? match[1] : null;
+            const desc = item.description || '';
+            const imgs = [...desc.matchAll(/<img[^>]+src="([^"]+)"/g)].map(m => decode(m[1]));
+            const thumb = imgs.find(u => /(i|preview|external-preview)\.redd\.it/.test(u)) || imgs[0] || null;
             return { title: item.title, link: item.link, thumb, source: 'Reddit' };
-          }).filter(p => p.thumb && !p.thumb.includes('external-preview'));
+          }).filter(p => p.thumb);
           allPosts = [...allPosts, ...redditPosts].slice(0, 6);
         }
+      }
+    } catch(e) {}
+  }
+
+  // 3) 그래도 비어 있으면 큐레이션 폴백
+  if (!allPosts.length) {
+    try {
+      const res = await fetch('feed_curated.json');
+      if (res.ok) {
+        const cur = await res.json();
+        allPosts = (cur || []).map(c => ({
+          link: c.url || '#',
+          thumb: c.thumbnail || '',
+          title: c.title,
+          source: '큐레이션'
+        })).slice(0, 6);
       }
     } catch(e) {}
   }
